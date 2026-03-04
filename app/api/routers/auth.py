@@ -1,6 +1,7 @@
 """Authentication API: register, login (password/2FA), me, logout."""
 
 import logging
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
@@ -54,6 +55,9 @@ class UserOut(BaseModel):
     name: str
     auth_method: str
     plan: str
+    trial_ends_at: datetime | None = None
+    trial_active: bool = False
+    trial_days_left: int = 0
 
     model_config = {"from_attributes": True}
 
@@ -98,6 +102,7 @@ def register(body: RegisterRequest):
             password_hash=pw_hash,
             auth_method=body.auth_method,
             chatwork_room_id=body.chatwork_room_id,
+            trial_ends_at=datetime.utcnow() + timedelta(days=14),
         )
         session.add(user)
         session.commit()

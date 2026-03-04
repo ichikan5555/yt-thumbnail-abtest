@@ -9,6 +9,9 @@ export interface AuthUser {
   name: string;
   auth_method: string;
   plan: string;
+  trial_ends_at: string | null;
+  trial_active: boolean;
+  trial_days_left: number;
 }
 
 interface AuthContextValue {

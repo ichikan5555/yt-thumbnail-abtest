@@ -66,9 +66,19 @@ export default function Layout() {
           {user && (
             <div className="px-4 py-2 text-xs text-gray-400 truncate">
               {user.name || user.email}
-              <span className="ml-1 px-1.5 py-0.5 bg-gray-800 rounded text-[10px] uppercase">
-                {user.plan}
-              </span>
+              {user.plan === "pro" ? (
+                <span className="ml-1 px-1.5 py-0.5 bg-indigo-600 text-white rounded text-[10px] uppercase">
+                  PRO
+                </span>
+              ) : user.trial_active ? (
+                <span className="ml-1 px-1.5 py-0.5 bg-emerald-700 text-emerald-100 rounded text-[10px]">
+                  {t("trial.badge", { days: String(user.trial_days_left) })}
+                </span>
+              ) : (
+                <span className="ml-1 px-1.5 py-0.5 bg-red-800 text-red-200 rounded text-[10px]">
+                  {t("trial.expired")}
+                </span>
+              )}
             </div>
           )}
           <div className="px-4 py-2 flex items-center justify-between">

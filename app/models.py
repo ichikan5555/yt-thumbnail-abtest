@@ -1,7 +1,7 @@
 """SQLAlchemy ORM models."""
 
 import enum
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from sqlalchemy import (
     Column,
@@ -157,8 +157,24 @@ class User(Base):
     auth_method = Column(String(20), nullable=False, default="password")  # password | 2fa_chatwork | 2fa_email
     chatwork_room_id = Column(String(50), nullable=True)
     plan = Column(String(20), nullable=False, default="standard")  # standard | pro
+    trial_ends_at = Column(DateTime, nullable=True)  # free trial expiry (14 days from registration)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    @property
+    def trial_active(self) -> bool:
+        if self.plan == "pro":
+            return False
+        if not self.trial_ends_at:
+            return False
+        return datetime.utcnow() < self.trial_ends_at
+
+    @property
+    def trial_days_left(self) -> int:
+        if not self.trial_ends_at:
+            return 0
+        delta = self.trial_ends_at - datetime.utcnow()
+        return max(0, delta.days)
 
 
 class ContactMessage(Base):

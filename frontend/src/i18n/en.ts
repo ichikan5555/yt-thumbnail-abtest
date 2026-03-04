@@ -192,8 +192,8 @@ const en: Record<string, string> = {
   // Landing Page
   "lp.heroTitle": "Automate YouTube\nThumbnail A/B Testing",
   "lp.heroSubtitle": "Rotate thumbnails automatically, measure views, CTR, and watch time. Find your best thumbnail with data, not guesswork.",
-  "lp.heroCta": "Get Started Free",
-  "lp.heroCtaSub": "Standard plan is free",
+  "lp.heroCta": "Start 14-Day Free Trial",
+  "lp.heroCtaSub": "Full features for 14 days, no credit card required",
   "lp.login": "Log In",
 
   "lp.howTitle": "Done in 3 Steps",
@@ -219,34 +219,32 @@ const en: Record<string, string> = {
   "lp.feature6Desc": "Switch between Japanese and English with one click. Perfect for international teams and clients.",
 
   "lp.pricingTitle": "Pricing",
-  "lp.pricingSubtitle": "Start free with Standard. Upgrade to Pro to unlock everything.",
-  "lp.planStandard": "Standard",
+  "lp.pricingSubtitle": "Try all features free for 14 days. Upgrade to Pro when you're ready.",
+  "lp.planTrial": "Free Trial",
   "lp.planPro": "Pro",
-  "lp.priceStandard": "Free",
+  "lp.priceTrial": "$0",
+  "lp.trialPeriod": "14 days — all features included",
   "lp.pricePro": "$19.99",
   "lp.priceProUnit": "/mo",
-  "lp.planStandardDesc": "For individual creators",
+  "lp.planTrialDesc": "Try everything before you commit",
   "lp.planProDesc": "For professionals",
-  "lp.planCtaStandard": "Get Started Free",
+  "lp.planCtaTrial": "Start 14-Day Free Trial",
   "lp.planCtaPro": "Start Pro",
   "lp.planPopular": "Popular",
 
-  "lp.featureAbTests": "A/B Tests",
-  "lp.featureAbTestsStandard": "3 per month",
-  "lp.featureAbTestsPro": "Unlimited",
+  "lp.featureAbTestsUnlimited": "Unlimited A/B Tests",
   "lp.featureAiAnalysis": "AI Analysis",
   "lp.featurePdfReport": "PDF Reports",
   "lp.featureWeeklyReport": "Weekly/Monthly Reports",
   "lp.featurePublicPage": "Client-Facing Pages",
-  "lp.featureNotification": "Notification Channels",
-  "lp.featureNotificationStandard": "Chatwork only",
-  "lp.featureNotificationPro": "All channels",
-  "lp.featureIncluded": "Included",
-  "lp.featureNotIncluded": "Not included",
+  "lp.featureNotificationAll": "All notification channels",
+  "lp.featureSchedule": "Scheduled execution",
+  "lp.featureMultilingual": "Multilingual support",
+  "lp.featurePriority": "Priority support",
 
   "lp.ctaTitle": "Replace guesswork with data",
-  "lp.ctaSubtitle": "Sign up in 30 seconds. No credit card required.",
-  "lp.ctaButton": "Get Started Free",
+  "lp.ctaSubtitle": "Sign up in 30 seconds. No credit card required. 14-day full access.",
+  "lp.ctaButton": "Start 14-Day Free Trial",
 
   "lp.footerProduct": "Product",
   "lp.footerFeatures": "Features",
@@ -357,7 +355,7 @@ const en: Record<string, string> = {
   "terms.section2Title": "2. Account Registration",
   "terms.section2Body": "Users must register with accurate information. Account management is the user's responsibility. Accounts may not be lent or transferred to third parties.",
   "terms.section3Title": "3. Pricing",
-  "terms.section3Body": "The Standard plan is free. The Pro plan is a paid monthly subscription. Prices are as displayed on the service. Payment is processed via Stripe credit card billing.",
+  "terms.section3Body": "New users receive a 14-day free trial with full access to all features. After the trial ends, a Pro plan subscription is required. Prices are as displayed on the service. Payment is processed via Stripe credit card billing.",
   "terms.section4Title": "4. Prohibited Actions",
   "terms.section4Body": "The following actions are prohibited:\n- Violations of law or public order\n- Interfering with service operations\n- Actions that disadvantage other users\n- Unauthorized access or attempts thereof\n- Violations of YouTube's Terms of Service\n- Intentionally consuming excessive API quota",
   "terms.section5Title": "5. Service Changes",
@@ -384,6 +382,10 @@ const en: Record<string, string> = {
   // Auth (Layout)
   "auth.logout": "Logout",
   "auth.myAccount": "My Account",
+
+  // Trial
+  "trial.badge": "Trial: {days}d left",
+  "trial.expired": "Trial expired",
 };
 
 export default en;

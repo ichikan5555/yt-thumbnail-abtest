@@ -9,7 +9,6 @@ import {
   ClockIcon,
   LanguageIcon,
   CheckIcon,
-  XMarkIcon,
   CloudArrowUpIcon,
 } from "@heroicons/react/24/outline";
 import { useI18n } from "../i18n/I18nContext";
@@ -37,50 +36,17 @@ const steps = [
   { key: 3, icon: TrophyIcon, color: "bg-emerald-600" },
 ];
 
-/* ─── Pricing comparison rows ─── */
-const comparisonRows = (t: (k: string) => string) => [
-  {
-    label: t("lp.featureAbTests"),
-    standard: t("lp.featureAbTestsStandard"),
-    pro: t("lp.featureAbTestsPro"),
-  },
-  {
-    label: t("lp.featureAiAnalysis"),
-    standard: false,
-    pro: true,
-  },
-  {
-    label: t("lp.featurePdfReport"),
-    standard: false,
-    pro: true,
-  },
-  {
-    label: t("lp.featureWeeklyReport"),
-    standard: false,
-    pro: true,
-  },
-  {
-    label: t("lp.featurePublicPage"),
-    standard: false,
-    pro: true,
-  },
-  {
-    label: t("lp.featureNotification"),
-    standard: t("lp.featureNotificationStandard"),
-    pro: t("lp.featureNotificationPro"),
-  },
+/* ─── Pricing feature list ─── */
+const allFeatures = (t: (k: string) => string) => [
+  t("lp.featureAbTestsUnlimited"),
+  t("lp.featureAiAnalysis"),
+  t("lp.featurePdfReport"),
+  t("lp.featureWeeklyReport"),
+  t("lp.featurePublicPage"),
+  t("lp.featureNotificationAll"),
+  t("lp.featureSchedule"),
+  t("lp.featureMultilingual"),
 ];
-
-function CellValue({ value }: { value: boolean | string }) {
-  if (typeof value === "string") {
-    return <span className="text-sm text-gray-700">{value}</span>;
-  }
-  return value ? (
-    <CheckIcon className="w-5 h-5 text-emerald-500 mx-auto" />
-  ) : (
-    <XMarkIcon className="w-5 h-5 text-gray-300 mx-auto" />
-  );
-}
 
 export default function Landing() {
   const { lang, setLang, t } = useI18n();
@@ -238,40 +204,25 @@ export default function Landing() {
           <p className="text-center text-gray-600 mb-12">{t("lp.pricingSubtitle")}</p>
 
           <div className="grid sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
-            {/* Standard */}
+            {/* Free Trial */}
             <div className="rounded-2xl border border-gray-200 bg-white p-6 flex flex-col">
-              <h3 className="text-lg font-bold">{t("lp.planStandard")}</h3>
-              <p className="text-sm text-gray-500 mt-1">{t("lp.planStandardDesc")}</p>
-              <div className="mt-4 mb-6">
-                <span className="text-4xl font-extrabold">{t("lp.priceStandard")}</span>
+              <h3 className="text-lg font-bold">{t("lp.planTrial")}</h3>
+              <p className="text-sm text-gray-500 mt-1">{t("lp.planTrialDesc")}</p>
+              <div className="mt-4 mb-1">
+                <span className="text-4xl font-extrabold">{t("lp.priceTrial")}</span>
               </div>
+              <p className="text-sm text-emerald-600 font-medium mb-5">{t("lp.trialPeriod")}</p>
               <Link
                 to="/register"
                 className="block text-center bg-gray-900 text-white py-2.5 rounded-xl font-medium hover:bg-gray-800 transition-colors"
               >
-                {t("lp.planCtaStandard")}
+                {t("lp.planCtaTrial")}
               </Link>
               <ul className="mt-6 space-y-3 flex-1">
-                {comparisonRows(t).map((row) => (
-                  <li key={row.label} className="flex items-center gap-2 text-sm">
-                    {typeof row.standard === "string" ? (
-                      <>
-                        <CheckIcon className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                        <span className="text-gray-700">
-                          {row.label}: {row.standard}
-                        </span>
-                      </>
-                    ) : row.standard ? (
-                      <>
-                        <CheckIcon className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                        <span className="text-gray-700">{row.label}</span>
-                      </>
-                    ) : (
-                      <>
-                        <XMarkIcon className="w-4 h-4 text-gray-300 flex-shrink-0" />
-                        <span className="text-gray-400">{row.label}</span>
-                      </>
-                    )}
+                {allFeatures(t).map((feat) => (
+                  <li key={feat} className="flex items-center gap-2 text-sm">
+                    <CheckIcon className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                    <span className="text-gray-700">{feat}</span>
                   </li>
                 ))}
               </ul>
@@ -295,51 +246,18 @@ export default function Landing() {
                 {t("lp.planCtaPro")}
               </Link>
               <ul className="mt-6 space-y-3 flex-1">
-                {comparisonRows(t).map((row) => (
-                  <li key={row.label} className="flex items-center gap-2 text-sm">
-                    {typeof row.pro === "string" ? (
-                      <>
-                        <CheckIcon className="w-4 h-4 text-indigo-500 flex-shrink-0" />
-                        <span className="text-gray-700">
-                          {row.label}: {row.pro}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <CheckIcon className="w-4 h-4 text-indigo-500 flex-shrink-0" />
-                        <span className="text-gray-700">{row.label}</span>
-                      </>
-                    )}
+                {allFeatures(t).map((feat) => (
+                  <li key={feat} className="flex items-center gap-2 text-sm">
+                    <CheckIcon className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+                    <span className="text-gray-700">{feat}</span>
                   </li>
                 ))}
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckIcon className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+                  <span className="text-gray-700 font-medium">{t("lp.featurePriority")}</span>
+                </li>
               </ul>
             </div>
-          </div>
-
-          {/* Comparison table (desktop) */}
-          <div className="hidden lg:block mt-16">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="py-3 text-left font-medium text-gray-500 w-1/3" />
-                  <th className="py-3 text-center font-semibold w-1/3">{t("lp.planStandard")}</th>
-                  <th className="py-3 text-center font-semibold text-indigo-600 w-1/3">{t("lp.planPro")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {comparisonRows(t).map((row) => (
-                  <tr key={row.label} className="border-b border-gray-100">
-                    <td className="py-3 text-gray-700">{row.label}</td>
-                    <td className="py-3 text-center">
-                      <CellValue value={row.standard} />
-                    </td>
-                    <td className="py-3 text-center">
-                      <CellValue value={row.pro} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </div>
         </div>
       </section>
@@ -350,7 +268,7 @@ export default function Landing() {
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">{t("lp.ctaTitle")}</h2>
           <p className="text-gray-600 mb-8">{t("lp.ctaSubtitle")}</p>
           <Link
-            to="/"
+            to="/register"
             className="inline-flex items-center gap-2 bg-indigo-600 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all hover:shadow-xl hover:shadow-indigo-300"
           >
             {t("lp.ctaButton")}

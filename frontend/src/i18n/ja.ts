@@ -192,8 +192,8 @@ const ja: Record<string, string> = {
   // ランディングページ
   "lp.heroTitle": "YouTubeサムネイル\nA/Bテストを完全自動化",
   "lp.heroSubtitle": "サムネイルを差し替えて、再生回数・CTR・視聴時間を自動計測。データドリブンで最適なサムネイルを見つけましょう。",
-  "lp.heroCta": "無料で始める",
-  "lp.heroCtaSub": "Standard プランは無料",
+  "lp.heroCta": "14日間無料で始める",
+  "lp.heroCtaSub": "全機能使える14日間フリートライアル",
   "lp.login": "ログイン",
 
   "lp.howTitle": "3ステップで完了",
@@ -219,34 +219,32 @@ const ja: Record<string, string> = {
   "lp.feature6Desc": "日本語・英語をワンクリックで切り替え。海外クライアントとの共有にも対応。",
 
   "lp.pricingTitle": "料金プラン",
-  "lp.pricingSubtitle": "まずは Standard プランで無料体験。Pro にアップグレードして全機能を解放。",
-  "lp.planStandard": "Standard",
+  "lp.pricingSubtitle": "14日間フル機能を無料体験。気に入ったら Pro へアップグレード。",
+  "lp.planTrial": "フリートライアル",
   "lp.planPro": "Pro",
-  "lp.priceStandard": "無料",
+  "lp.priceTrial": "¥0",
+  "lp.trialPeriod": "14日間 全機能使い放題",
   "lp.pricePro": "¥2,980",
   "lp.priceProUnit": "/月",
-  "lp.planStandardDesc": "個人クリエイター向け",
+  "lp.planTrialDesc": "まずは全機能を試してみましょう",
   "lp.planProDesc": "プロフェッショナル向け",
-  "lp.planCtaStandard": "無料で始める",
+  "lp.planCtaTrial": "14日間無料で始める",
   "lp.planCtaPro": "Pro を始める",
   "lp.planPopular": "人気",
 
-  "lp.featureAbTests": "A/Bテスト",
-  "lp.featureAbTestsStandard": "月3回まで",
-  "lp.featureAbTestsPro": "無制限",
+  "lp.featureAbTestsUnlimited": "A/Bテスト無制限",
   "lp.featureAiAnalysis": "AI分析",
   "lp.featurePdfReport": "PDFレポート",
   "lp.featureWeeklyReport": "週次/月次レポート",
   "lp.featurePublicPage": "顧客向け公開ページ",
-  "lp.featureNotification": "通知チャンネル",
-  "lp.featureNotificationStandard": "Chatworkのみ",
-  "lp.featureNotificationPro": "全チャンネル",
-  "lp.featureIncluded": "あり",
-  "lp.featureNotIncluded": "なし",
+  "lp.featureNotificationAll": "全通知チャンネル対応",
+  "lp.featureSchedule": "スケジュール実行",
+  "lp.featureMultilingual": "多言語対応",
+  "lp.featurePriority": "優先サポート",
 
   "lp.ctaTitle": "サムネイルの勘を、データに変えよう",
-  "lp.ctaSubtitle": "登録は30秒。クレジットカード不要。",
-  "lp.ctaButton": "無料で始める",
+  "lp.ctaSubtitle": "登録は30秒。クレジットカード不要。14日間フル機能を体験。",
+  "lp.ctaButton": "14日間無料で始める",
 
   "lp.footerProduct": "プロダクト",
   "lp.footerFeatures": "機能一覧",
@@ -357,7 +355,7 @@ const ja: Record<string, string> = {
   "terms.section2Title": "第2条（アカウント登録）",
   "terms.section2Body": "ユーザーは正確な情報を登録する義務があります。アカウントの管理はユーザー自身の責任で行ってください。第三者にアカウントを貸与・譲渡することはできません。",
   "terms.section3Title": "第3条（利用料金）",
-  "terms.section3Body": "Standard プランは無料でご利用いただけます。Pro プランは月額制の有料サービスです。料金はサービス画面に表示される金額とします。支払い方法はクレジットカード決済（Stripe）を利用します。",
+  "terms.section3Body": "新規登録時より14日間はフリートライアルとして全機能を無料でご利用いただけます。トライアル終了後は Pro プラン（月額制）へのアップグレードが必要です。料金はサービス画面に表示される金額とします。支払い方法はクレジットカード決済（Stripe）を利用します。",
   "terms.section4Title": "第4条（禁止事項）",
   "terms.section4Body": "以下の行為を禁止します。\n・法令または公序良俗に違反する行為\n・サービスの運営を妨害する行為\n・他のユーザーに不利益を与える行為\n・不正アクセスまたはその試み\n・YouTube の利用規約に違反する行為\n・APIクォータを意図的に大量消費する行為",
   "terms.section5Title": "第5条（サービスの変更・停止）",
@@ -384,6 +382,10 @@ const ja: Record<string, string> = {
   // Auth (Layout)
   "auth.logout": "ログアウト",
   "auth.myAccount": "マイアカウント",
+
+  // Trial
+  "trial.badge": "トライアル 残り{days}日",
+  "trial.expired": "トライアル終了",
 };
 
 export default ja;
