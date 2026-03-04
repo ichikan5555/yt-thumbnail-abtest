@@ -1,0 +1,13 @@
+.env
+credentials/
+data/*.db
+data/thumbnails/
+logs/*.log
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+dist/
+CLAUDE.md
+node_modules/
+frontend/dist/
