@@ -1,9 +1,24 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { getResults, fetchAnalytics } from "../api/client";
-import type { TestResult } from "../api/types";
+import {
+  getResults,
+  fetchAnalytics,
+  getHeatmap,
+  getSignificance,
+  getDegradation,
+  toggleDegradation,
+  downloadReport,
+} from "../api/client";
+import type {
+  TestResult,
+  HeatmapData,
+  SignificanceData,
+  DegradationData,
+} from "../api/types";
 import VelocityChart from "../components/VelocityChart";
+import HeatmapGrid from "../components/HeatmapGrid";
 import { useT } from "../i18n/I18nContext";
+import { useAuth } from "../context/AuthContext";
 import {
   RadarChart,
   Radar,
@@ -18,6 +33,9 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
+  LineChart,
+  Line,
+  ReferenceLine,
 } from "recharts";
 
 const VARIANT_COLORS = ["#6366f1", "#f59e0b", "#10b981"];
@@ -26,11 +44,23 @@ export default function Results() {
   const { id } = useParams<{ id: string }>();
   const testId = Number(id);
   const t = useT();
+  const { user } = useAuth();
+  const isPro = user?.plan === "pro" || user?.trial_active === true;
+  const [pdfLoading, setPdfLoading] = useState(false);
   const [result, setResult] = useState<TestResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [fetchingAnalytics, setFetchingAnalytics] = useState(false);
   const [analyticsMsg, setAnalyticsMsg] = useState("");
+
+  // Feature 1: Heatmap
+  const [heatmap, setHeatmap] = useState<HeatmapData | null>(null);
+
+  // Feature 2: Significance
+  const [significance, setSignificance] = useState<SignificanceData | null>(null);
+
+  // Feature 4: Degradation
+  const [degradation, setDegradation] = useState<DegradationData | null>(null);
 
   const loadResults = () => {
     setLoading(true);
@@ -42,6 +72,10 @@ export default function Results() {
 
   useEffect(() => {
     loadResults();
+    // Load additional data in parallel
+    getHeatmap(testId).then(setHeatmap).catch(() => {});
+    getSignificance(testId).then(setSignificance).catch(() => {});
+    getDegradation(testId).then(setDegradation).catch(() => {});
   }, [testId]);
 
   const handleFetchAnalytics = async () => {
@@ -56,6 +90,15 @@ export default function Results() {
       setAnalyticsMsg(`${t("common.error")}: ${msg}`);
     } finally {
       setFetchingAnalytics(false);
+    }
+  };
+
+  const handleToggleDegradation = async () => {
+    try {
+      await toggleDegradation(testId);
+      getDegradation(testId).then(setDegradation).catch(() => {});
+    } catch {
+      // ignore
     }
   };
 
@@ -87,12 +130,36 @@ export default function Results() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">{t("results.title", { id: result.test_id })}</h1>
-        <Link
-          to={`/tests/${result.test_id}`}
-          className="text-indigo-600 hover:underline text-sm"
-        >
-          {t("results.backToDetail")}
-        </Link>
+        <div className="flex items-center gap-3">
+          {isPro ? (
+            <button
+              onClick={async () => {
+                setPdfLoading(true);
+                try {
+                  await downloadReport(testId);
+                } catch {
+                  alert(t("report.downloadFailed"));
+                } finally {
+                  setPdfLoading(false);
+                }
+              }}
+              disabled={pdfLoading}
+              className="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {pdfLoading ? t("report.downloading") : t("report.downloadBtn")}
+            </button>
+          ) : (
+            <span className="text-xs text-amber-600 bg-amber-50 px-3 py-1 rounded">
+              {t("report.proOnlyBadge")}
+            </span>
+          )}
+          <Link
+            to={`/tests/${result.test_id}`}
+            className="text-indigo-600 hover:underline text-sm"
+          >
+            {t("results.backToDetail")}
+          </Link>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow p-4">
@@ -112,6 +179,56 @@ export default function Results() {
             t("results.vsWorst", { pct: result.winner.improvement_pct.toFixed(1) })}
         </p>
       </div>
+
+      {/* Feature 2: Significance badges */}
+      {significance && significance.pairs.length > 0 && (
+        <div className="bg-white rounded-lg shadow p-4 space-y-3">
+          <h2 className="font-semibold">{t("significance.title")}</h2>
+          <div className="flex flex-wrap gap-2">
+            {significance.overall_confident ? (
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">
+                {t("significance.confident")}
+              </span>
+            ) : significance.pairs.some((p) => p.confidence_pct >= 80) ? (
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-700">
+                {t("significance.lowConfidence")}
+              </span>
+            ) : (
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-500">
+                {t("significance.insufficient")}
+              </span>
+            )}
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">{t("significance.colPair")}</th>
+                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">p-value</th>
+                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">{t("significance.colConfidence")}</th>
+                  <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">{t("significance.colBetter")}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {significance.pairs.map((p) => (
+                  <tr key={`${p.variant_a}-${p.variant_b}`}>
+                    <td className="px-3 py-2">{p.variant_a} vs {p.variant_b}</td>
+                    <td className="px-3 py-2 text-right font-mono">{p.p_value.toFixed(3)}</td>
+                    <td className="px-3 py-2 text-right font-mono">{p.confidence_pct}%</td>
+                    <td className="px-3 py-2 text-center">
+                      {p.significant ? (
+                        <span className="text-green-600 font-medium">{p.better_variant}</span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Analytics fetch button */}
       {!result.has_analytics && (
@@ -183,6 +300,14 @@ export default function Results() {
         <h2 className="font-semibold mb-4">{t("results.avgVelocityChart")}</h2>
         <VelocityChart variants={result.variants} />
       </div>
+
+      {/* Feature 1: Heatmap */}
+      {heatmap && heatmap.variants.length > 0 && (
+        <div className="bg-white rounded-lg shadow p-4">
+          <h2 className="font-semibold mb-4">{t("heatmap.title")}</h2>
+          <HeatmapGrid variants={heatmap.variants} />
+        </div>
+      )}
 
       {/* Metric detail table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -353,6 +478,53 @@ export default function Results() {
           </tbody>
         </table>
       </div>
+
+      {/* Feature 4: Degradation Tracker */}
+      {degradation && (
+        <div className="bg-white rounded-lg shadow p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold">{t("degradation.title")}</h2>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={degradation.tracking_enabled}
+                onChange={handleToggleDegradation}
+                className="rounded border-gray-300"
+              />
+              {t("degradation.trackingLabel")}
+            </label>
+          </div>
+
+          {degradation.alert && (
+            <div className="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-700">
+              {degradation.alert}
+            </div>
+          )}
+
+          {degradation.checks.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={degradation.checks.map((c) => ({
+                day: c.day_number,
+                velocity: c.velocity_24h,
+              }))}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="day" label={{ value: t("degradation.xAxis"), position: "insideBottom", offset: -5 }} />
+                <YAxis label={{ value: "v/h", angle: -90, position: "insideLeft" }} />
+                <Tooltip formatter={(v) => `${Number(v).toFixed(1)} v/h`} />
+                <ReferenceLine
+                  y={degradation.avg_test_velocity}
+                  stroke="#f59e0b"
+                  strokeDasharray="5 5"
+                  label={t("degradation.testAvg")}
+                />
+                <Line type="monotone" dataKey="velocity" stroke="#6366f1" strokeWidth={2} dot />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-sm text-gray-400">{t("degradation.noData")}</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

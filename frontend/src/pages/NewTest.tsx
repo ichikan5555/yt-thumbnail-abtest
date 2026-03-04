@@ -1,8 +1,10 @@
 import { useState, useEffect, useMemo, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { createTest, getSettings } from "../api/client";
+import { createTest, getSettings, listTemplates, saveTemplate } from "../api/client";
 import { DEFAULT_WEIGHTS } from "../api/types";
+import type { TestTemplate } from "../api/types";
 import WeightSliders from "../components/WeightSliders";
+import CalendarPicker from "../components/CalendarPicker";
 import { useT } from "../i18n/I18nContext";
 
 const ALL_LABELS = ["A", "B", "C", "D"];
@@ -22,7 +24,55 @@ export default function NewTest() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  // Load defaults from user settings
+  // Feature 3: Multi-day
+  const [testMode, setTestMode] = useState<"single" | "multi_day">("single");
+  const [selectedDays, setSelectedDays] = useState<string[]>([]);
+  const [dailyStartTime, setDailyStartTime] = useState("14:00");
+
+  // Templates
+  const [templates, setTemplates] = useState<TestTemplate[]>([]);
+  const [templateMsg, setTemplateMsg] = useState("");
+
+  const loadTemplates = () => {
+    listTemplates().then(setTemplates).catch(() => {});
+  };
+
+  const handleTemplateSelect = (name: string) => {
+    const tpl = templates.find((t) => t.name === name);
+    if (!tpl) return;
+    setNumPatterns(tpl.num_patterns);
+    setRotationInterval(tpl.rotation_interval);
+    setCycles(tpl.cycles);
+    if (tpl.metric_weights && Object.keys(tpl.metric_weights).length > 0) {
+      setMetricWeights(tpl.metric_weights);
+    }
+    setTestMode(tpl.test_mode as "single" | "multi_day");
+    if (tpl.daily_start_time) setDailyStartTime(tpl.daily_start_time);
+  };
+
+  const handleSaveTemplate = async () => {
+    const name = prompt(t("template.saveName"));
+    if (!name?.trim()) return;
+    setTemplateMsg("");
+    try {
+      await saveTemplate({
+        name: name.trim(),
+        num_patterns: numPatterns,
+        rotation_interval: rotationInterval,
+        cycles,
+        metric_weights: metricWeights,
+        test_mode: testMode,
+        daily_start_time: dailyStartTime,
+      });
+      setTemplateMsg(t("template.saved", { name: name.trim() }));
+      loadTemplates();
+      setTimeout(() => setTemplateMsg(""), 3000);
+    } catch {
+      setTemplateMsg(t("template.saveFailed"));
+    }
+  };
+
+  // Load defaults from user settings + templates
   useEffect(() => {
     getSettings()
       .then((s) => {
@@ -35,6 +85,7 @@ export default function NewTest() {
         }
       })
       .catch(() => {});
+    loadTemplates();
   }, []);
 
   const labels = ALL_LABELS.slice(0, numPatterns);
@@ -94,15 +145,23 @@ export default function NewTest() {
       return;
     }
 
+    if (testMode === "multi_day" && selectedDays.length === 0) {
+      setError(t("newTest.multiDayRequired"));
+      return;
+    }
+
     setSubmitting(true);
     try {
       const test = await createTest(
         videoId.trim(),
         activeFiles as File[],
         rotationInterval,
-        scheduledStart || undefined,
-        scheduledEnd || undefined,
+        testMode === "single" ? (scheduledStart || undefined) : undefined,
+        testMode === "single" ? (scheduledEnd || undefined) : undefined,
         metricWeights,
+        testMode,
+        testMode === "multi_day" ? selectedDays : undefined,
+        testMode === "multi_day" ? dailyStartTime : undefined,
       );
       navigate(`/tests/${test.id}`);
     } catch (err: unknown) {
@@ -127,6 +186,31 @@ export default function NewTest() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Template Selector */}
+        {templates.length > 0 && (
+          <div className="bg-indigo-50 rounded-lg p-4">
+            <label className="block text-sm font-medium text-indigo-700 mb-1">
+              {t("template.select")}
+            </label>
+            <select
+              onChange={(e) => e.target.value && handleTemplateSelect(e.target.value)}
+              defaultValue=""
+              className="border border-indigo-200 rounded px-3 py-2 text-sm w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+            >
+              <option value="">{t("template.none")}</option>
+              {templates.map((tpl) => (
+                <option key={tpl.name} value={tpl.name}>
+                  {tpl.name} ({t("template.summary", {
+                    patterns: String(tpl.num_patterns),
+                    interval: String(tpl.rotation_interval),
+                    cycles: String(tpl.cycles),
+                  })})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             {t("newTest.videoId")}
@@ -139,6 +223,71 @@ export default function NewTest() {
             className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
         </div>
+
+        {/* Test Mode Toggle (Feature 3) */}
+        <div className="bg-gray-50 rounded-lg p-4">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">{t("newTest.testModeLabel")}</h3>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setTestMode("single")}
+              className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
+                testMode === "single"
+                  ? "bg-indigo-600 text-white"
+                  : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              {t("newTest.modeSingle")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setTestMode("multi_day")}
+              className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
+                testMode === "multi_day"
+                  ? "bg-indigo-600 text-white"
+                  : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              {t("newTest.modeMultiDay")}
+            </button>
+          </div>
+        </div>
+
+        {/* Multi-day calendar (Feature 3) */}
+        {testMode === "multi_day" && (
+          <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700">{t("newTest.multiDaySettings")}</h3>
+            <div className="flex gap-6">
+              <CalendarPicker
+                selectedDays={selectedDays}
+                onChange={setSelectedDays}
+                maxDays={7}
+              />
+              <div className="flex-1 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {t("newTest.dailyStartTime")}
+                  </label>
+                  <input
+                    type="time"
+                    value={dailyStartTime}
+                    onChange={(e) => setDailyStartTime(e.target.value)}
+                    className="border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+                {selectedDays.length > 0 && (
+                  <div className="bg-indigo-50 rounded px-3 py-2 text-sm text-indigo-700">
+                    {t("newTest.multiDaySummary", {
+                      time: dailyStartTime,
+                      days: selectedDays.join(", "),
+                      count: String(selectedDays.length),
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Schedule Settings */}
         <div className="bg-gray-50 rounded-lg p-4 space-y-4">
@@ -213,37 +362,39 @@ export default function NewTest() {
             })}
           </div>
 
-          {/* Start Time */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t("newTest.startTime")}
-              </label>
-              <input
-                type="datetime-local"
-                value={scheduledStart}
-                onChange={(e) => setScheduledStart(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                {t("newTest.emptyStart")}
-              </p>
+          {/* Start Time (single mode only) */}
+          {testMode === "single" && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t("newTest.startTime")}
+                </label>
+                <input
+                  type="datetime-local"
+                  value={scheduledStart}
+                  onChange={(e) => setScheduledStart(e.target.value)}
+                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  {t("newTest.emptyStart")}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t("newTest.endTimeLabel")}
+                </label>
+                <input
+                  type="datetime-local"
+                  value={scheduledEnd}
+                  readOnly
+                  className="w-full border border-gray-200 rounded px-3 py-2 text-sm bg-gray-100 text-gray-500 cursor-not-allowed"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  {t("newTest.endTimeAuto")}
+                </p>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t("newTest.endTimeLabel")}
-              </label>
-              <input
-                type="datetime-local"
-                value={scheduledEnd}
-                readOnly
-                className="w-full border border-gray-200 rounded px-3 py-2 text-sm bg-gray-100 text-gray-500 cursor-not-allowed"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                {t("newTest.endTimeAuto")}
-              </p>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Metric Weights */}
@@ -299,17 +450,31 @@ export default function NewTest() {
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="bg-indigo-600 text-white px-6 py-2 rounded text-sm hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {submitting
-            ? t("newTest.creating")
-            : scheduledStart
-              ? t("newTest.scheduleTest")
-              : t("newTest.startTest")}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="submit"
+            disabled={submitting}
+            className="bg-indigo-600 text-white px-6 py-2 rounded text-sm hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {submitting
+              ? t("newTest.creating")
+              : testMode === "multi_day"
+                ? t("newTest.scheduleMultiDay")
+                : scheduledStart
+                  ? t("newTest.scheduleTest")
+                  : t("newTest.startTest")}
+          </button>
+          <button
+            type="button"
+            onClick={handleSaveTemplate}
+            className="border border-indigo-300 text-indigo-600 px-4 py-2 rounded text-sm hover:bg-indigo-50"
+          >
+            {t("template.saveBtn")}
+          </button>
+        </div>
+        {templateMsg && (
+          <p className="text-sm text-green-600">{templateMsg}</p>
+        )}
       </form>
     </div>
   );

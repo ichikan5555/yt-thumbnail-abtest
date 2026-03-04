@@ -34,6 +34,9 @@ export interface TestSummary {
   created_at: string | null;
   started_at: string | null;
   completed_at: string | null;
+  test_mode: string;
+  current_day_index: number;
+  total_days: number;
 }
 
 export interface TestDetail {
@@ -55,6 +58,11 @@ export interface TestDetail {
   error_message: string | null;
   variants: Variant[];
   measurements: Measurement[];
+  test_mode: string;
+  scheduled_days: string;
+  daily_start_time: string;
+  current_day_index: number;
+  total_days: number;
 }
 
 export interface MetricScore {
@@ -137,4 +145,125 @@ export interface Settings {
   default_start_time: string;
   default_metric_weights: Record<string, number>;
   notification_channels: string[];
+}
+
+// Feature 1: Heatmap
+export interface HeatmapCell {
+  weekday: number;
+  hour: number;
+  avg_velocity: number;
+}
+
+export interface VariantHeatmap {
+  label: string;
+  cells: HeatmapCell[];
+}
+
+export interface HeatmapData {
+  test_id: number;
+  variants: VariantHeatmap[];
+}
+
+// Feature 2: Significance
+export interface PairComparison {
+  variant_a: string;
+  variant_b: string;
+  p_value: number;
+  confidence_pct: number;
+  significant: boolean;
+  better_variant: string;
+}
+
+export interface SignificanceData {
+  test_id: number;
+  sample_sizes: Record<string, number>;
+  pairs: PairComparison[];
+  overall_confident: boolean;
+}
+
+// Feature 4: Degradation
+export interface DegradationCheckData {
+  day_number: number;
+  view_count: number;
+  daily_views: number;
+  velocity_24h: number;
+  checked_at: string | null;
+}
+
+export interface DegradationData {
+  test_id: number;
+  tracking_enabled: boolean;
+  alert: string | null;
+  avg_test_velocity: number;
+  checks: DegradationCheckData[];
+}
+
+// Feature 5: Cross Analysis
+export interface CategoryStat {
+  category: string;
+  count: number;
+  wins: number;
+  win_rate: number;
+  avg_score: number;
+}
+
+export interface CrossAnalysisData {
+  total_tests: number;
+  categories: CategoryStat[];
+}
+
+// Feature 6: Competitor
+export interface CompetitorVideo {
+  video_id: string;
+  title: string;
+  thumbnail_url: string;
+  categories: string[];
+}
+
+export interface CompetitorResult {
+  id?: number;
+  channel_id: string;
+  channel_title: string;
+  video_count: number;
+  category_distribution: Record<string, number>;
+  face_usage_rate: number;
+  text_usage_rate: number;
+  videos: CompetitorVideo[];
+  recommendations: string;
+  created_at?: string;
+}
+
+export interface CompetitorHistoryItem {
+  id: number;
+  channel_id: string;
+  channel_title: string;
+  video_count: number;
+  created_at: string | null;
+}
+
+// Templates
+export interface TestTemplate {
+  name: string;
+  num_patterns: number;
+  rotation_interval: number;
+  cycles: number;
+  metric_weights: Record<string, number>;
+  test_mode: string;
+  daily_start_time: string;
+}
+
+// Report / Logo
+export interface LogoStatus {
+  has_logo: boolean;
+}
+
+// Backup
+export interface BackupItem {
+  filename: string;
+  size: number;
+  created_at: string;
+}
+
+export interface BackupCreateResult extends BackupItem {
+  test_count: number;
 }

@@ -1,8 +1,10 @@
 """Test CRUD and operations API."""
 
+import json
 import logging
 import math
 import shutil
+from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
@@ -10,12 +12,18 @@ from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 
 from app.config import settings
 from app.database import get_session
-from app.models import ABTest, Measurement, TestStatus, Variant
+from app.models import ABTest, DegradationCheck, Measurement, TestStatus, Variant
 from app.api.schemas import (
+    DegradationCheckOut,
+    DegradationOut,
+    HeatmapCell,
+    HeatmapOut,
     MeasurementOut,
+    SignificanceOut,
     TestDetail,
     TestResultOut,
     TestSummary,
+    VariantHeatmap,
     VariantOut,
     VariantResultOut,
 )
@@ -80,6 +88,9 @@ def list_tests():
                 created_at=t.created_at,
                 started_at=t.started_at,
                 completed_at=t.completed_at,
+                test_mode=t.test_mode or "single",
+                current_day_index=t.current_day_index or 0,
+                total_days=t.total_days or 1,
             ))
         return result
     finally:
@@ -97,6 +108,9 @@ async def create_test(
     scheduled_start: str = Form(default=""),
     scheduled_end: str = Form(default=""),
     metric_weights: str = Form(default=""),
+    test_mode: str = Form(default="single"),
+    scheduled_days: str = Form(default=""),
+    daily_start_time: str = Form(default=""),
 ):
     from app.services.youtube_api import youtube_api
     from app.services.state_machine import state_machine
@@ -157,6 +171,18 @@ async def create_test(
     except Exception as e:
         raise HTTPException(400, f"Failed to fetch video info: {e}")
 
+    # Parse multi-day params
+    days_list = []
+    total_days = 1
+    if test_mode == "multi_day" and scheduled_days:
+        try:
+            days_list = json.loads(scheduled_days)
+            total_days = len(days_list)
+        except (json.JSONDecodeError, TypeError):
+            raise HTTPException(400, "Invalid scheduled_days format")
+        if total_days < 1 or total_days > 7:
+            raise HTTPException(400, "Multi-day tests support 1-7 days")
+
     # Create test with schedule params
     test = state_machine.create_test(
         video_id, image_paths, info["title"],
@@ -165,10 +191,26 @@ async def create_test(
         scheduled_start=sched_start_dt,
         scheduled_end=sched_end_dt,
         metric_weights=metric_weights if metric_weights else None,
+        test_mode=test_mode,
+        scheduled_days=scheduled_days if test_mode == "multi_day" else "",
+        daily_start_time=daily_start_time if test_mode == "multi_day" else "",
+        total_days=total_days,
     )
 
     now = datetime.utcnow()
-    if sched_start_dt and sched_start_dt > now:
+    if test_mode == "multi_day" and days_list:
+        # Multi-day: schedule first day
+        from datetime import date as date_type
+        first_day = days_list[0]
+        start_time = daily_start_time or "00:00"
+        first_dt = datetime.fromisoformat(f"{first_day}T{start_time}:00")
+        if first_dt > now:
+            rotation_scheduler.schedule_delayed_start(test.id, first_dt)
+        else:
+            test = state_machine.start_test(test.id)
+            notifier.notify_test_start(test.id, video_id, info["title"])
+            rotation_scheduler.schedule_test(test.id)
+    elif sched_start_dt and sched_start_dt > now:
         # Future start: schedule delayed start
         rotation_scheduler.schedule_delayed_start(test.id, sched_start_dt)
         logger.info("Test #%d scheduled to start at %s", test.id, sched_start_dt)
@@ -274,6 +316,131 @@ def cancel_test(test_id: int):
     return _get_test_detail(test_id)
 
 
+# --- Feature 1: Heatmap ---
+
+@router.get("/{test_id}/heatmap", response_model=HeatmapOut)
+def get_heatmap(test_id: int):
+    """Get time-of-day heatmap data for a test."""
+    session = get_session()
+    try:
+        test = session.get(ABTest, test_id)
+        if not test:
+            raise HTTPException(404, "Test not found")
+
+        variants = session.query(Variant).filter_by(ab_test_id=test_id).all()
+        variant_map = {v.id: v.label for v in variants}
+
+        measurements = (
+            session.query(Measurement)
+            .filter_by(ab_test_id=test_id)
+            .filter(Measurement.velocity.isnot(None))
+            .all()
+        )
+
+        # Group by variant label -> (weekday, hour) -> velocities
+        data: dict[str, dict[tuple[int, int], list[float]]] = defaultdict(lambda: defaultdict(list))
+        for m in measurements:
+            if m.started_at and m.variant_id in variant_map:
+                label = variant_map[m.variant_id]
+                wd = m.started_at.weekday()  # 0=Mon
+                hr = m.started_at.hour
+                data[label][(wd, hr)].append(m.velocity)
+
+        variant_heatmaps = []
+        for label in sorted(data.keys()):
+            cells = []
+            for (wd, hr), velocities in sorted(data[label].items()):
+                avg = sum(velocities) / len(velocities)
+                cells.append(HeatmapCell(weekday=wd, hour=hr, avg_velocity=round(avg, 1)))
+            variant_heatmaps.append(VariantHeatmap(label=label, cells=cells))
+
+        return HeatmapOut(test_id=test_id, variants=variant_heatmaps)
+    finally:
+        session.close()
+
+
+# --- Feature 2: Significance ---
+
+@router.get("/{test_id}/significance", response_model=SignificanceOut)
+def get_significance(test_id: int):
+    """Get statistical significance analysis."""
+    session = get_session()
+    try:
+        test = session.get(ABTest, test_id)
+        if not test:
+            raise HTTPException(404, "Test not found")
+    finally:
+        session.close()
+
+    from app.services.statistics import compute_significance
+    result = compute_significance(test_id)
+    return SignificanceOut(**result)
+
+
+# --- Feature 4: Degradation ---
+
+@router.get("/{test_id}/degradation", response_model=DegradationOut)
+def get_degradation(test_id: int):
+    """Get degradation tracking data for a completed test."""
+    session = get_session()
+    try:
+        test = session.get(ABTest, test_id)
+        if not test:
+            raise HTTPException(404, "Test not found")
+
+        checks = (
+            session.query(DegradationCheck)
+            .filter_by(ab_test_id=test_id)
+            .order_by(DegradationCheck.day_number)
+            .all()
+        )
+
+        # Calculate avg test velocity
+        measurements = (
+            session.query(Measurement)
+            .filter_by(ab_test_id=test_id)
+            .filter(Measurement.velocity.isnot(None))
+            .all()
+        )
+        avg_test_velocity = 0.0
+        if measurements:
+            avg_test_velocity = sum(m.velocity for m in measurements) / len(measurements)
+
+        return DegradationOut(
+            test_id=test_id,
+            tracking_enabled=bool(test.degradation_tracking),
+            alert=test.degradation_alert,
+            avg_test_velocity=round(avg_test_velocity, 1),
+            checks=[
+                DegradationCheckOut(
+                    day_number=c.day_number,
+                    view_count=c.view_count,
+                    daily_views=c.daily_views,
+                    velocity_24h=c.velocity_24h,
+                    checked_at=c.checked_at,
+                )
+                for c in checks
+            ],
+        )
+    finally:
+        session.close()
+
+
+@router.post("/{test_id}/degradation/toggle")
+def toggle_degradation(test_id: int):
+    """Toggle degradation tracking on/off."""
+    session = get_session()
+    try:
+        test = session.get(ABTest, test_id)
+        if not test:
+            raise HTTPException(404, "Test not found")
+        test.degradation_tracking = 0 if test.degradation_tracking else 1
+        session.commit()
+        return {"tracking_enabled": bool(test.degradation_tracking)}
+    finally:
+        session.close()
+
+
 def _get_test_detail(test_id: int) -> TestDetail:
     session = get_session()
     try:
@@ -308,6 +475,11 @@ def _get_test_detail(test_id: int) -> TestDetail:
             error_message=test.error_message,
             variants=[_variant_out(v) for v in variants],
             measurements=[_measurement_out(m, session) for m in measurements],
+            test_mode=test.test_mode or "single",
+            scheduled_days=test.scheduled_days or "",
+            daily_start_time=test.daily_start_time or "",
+            current_day_index=test.current_day_index or 0,
+            total_days=test.total_days or 1,
         )
     finally:
         session.close()

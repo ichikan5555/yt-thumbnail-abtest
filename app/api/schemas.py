@@ -51,6 +51,9 @@ class TestSummary(BaseModel):
     created_at: datetime | None
     started_at: datetime | None
     completed_at: datetime | None
+    test_mode: str = "single"
+    current_day_index: int = 0
+    total_days: int = 1
 
     model_config = {"from_attributes": True}
 
@@ -74,6 +77,11 @@ class TestDetail(BaseModel):
     error_message: str | None
     variants: list[VariantOut]
     measurements: list[MeasurementOut]
+    test_mode: str = "single"
+    scheduled_days: str = ""
+    daily_start_time: str = ""
+    current_day_index: int = 0
+    total_days: int = 1
 
     model_config = {"from_attributes": True}
 
@@ -159,3 +167,55 @@ class SettingsUpdate(BaseModel):
     default_start_time: str | None = None
     default_metric_weights: dict[str, int] | None = None
     notification_channels: list[str] | None = None
+
+
+# --- Heatmap (Feature 1) ---
+
+class HeatmapCell(BaseModel):
+    weekday: int       # 0=Mon, 6=Sun
+    hour: int          # 0-23
+    avg_velocity: float
+
+class VariantHeatmap(BaseModel):
+    label: str
+    cells: list[HeatmapCell]
+
+class HeatmapOut(BaseModel):
+    test_id: int
+    variants: list[VariantHeatmap]
+
+
+# --- Statistical Significance (Feature 2) ---
+
+class PairComparison(BaseModel):
+    variant_a: str
+    variant_b: str
+    p_value: float
+    confidence_pct: float
+    significant: bool
+    better_variant: str
+
+class SignificanceOut(BaseModel):
+    test_id: int
+    sample_sizes: dict[str, int]
+    pairs: list[PairComparison]
+    overall_confident: bool
+
+
+# --- Degradation (Feature 4) ---
+
+class DegradationCheckOut(BaseModel):
+    day_number: int
+    view_count: int
+    daily_views: int
+    velocity_24h: float
+    checked_at: datetime | None
+
+    model_config = {"from_attributes": True}
+
+class DegradationOut(BaseModel):
+    test_id: int
+    tracking_enabled: bool
+    alert: str | None
+    avg_test_velocity: float
+    checks: list[DegradationCheckOut]

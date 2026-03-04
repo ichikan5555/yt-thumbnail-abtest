@@ -60,12 +60,23 @@ def create_app() -> FastAPI:
     from app.api.routers.auth import router as auth_router
     from app.api.routers.contact import router as contact_router
 
+    from app.api.routers.cross_analysis import router as cross_analysis_router
+    from app.api.routers.competitor import router as competitor_router
+    from app.api.routers.backup import router as backup_router
+    from app.api.routers.templates import router as templates_router
+    from app.api.routers.report import router as report_router
+
     app.include_router(tests_router)
     app.include_router(quota_router)
     app.include_router(events_router)
     app.include_router(settings_router)
     app.include_router(auth_router)
     app.include_router(contact_router)
+    app.include_router(cross_analysis_router)
+    app.include_router(competitor_router)
+    app.include_router(backup_router)
+    app.include_router(templates_router)
+    app.include_router(report_router)
 
     # Serve uploaded thumbnails
     thumb_dir = settings.thumbnail_upload_dir

@@ -386,6 +386,161 @@ const ja: Record<string, string> = {
   // Trial
   "trial.badge": "トライアル 残り{days}日",
   "trial.expired": "トライアル終了",
+
+  // Status (追加)
+  "status.daily_paused": "日次停止中",
+
+  // Navigation (追加)
+  "nav.crossAnalysis": "クロス分析",
+  "nav.competitor": "ライバル分析",
+
+  // Dashboard (追加)
+  "dashboard.multiDay": "Day {current}/{total}",
+
+  // NewTest (追加: multi-day)
+  "newTest.testModeLabel": "テストモード",
+  "newTest.modeSingle": "通常テスト",
+  "newTest.modeMultiDay": "マルチデイ",
+  "newTest.multiDaySettings": "マルチデイ設定",
+  "newTest.dailyStartTime": "毎日の開始時刻",
+  "newTest.multiDaySummary": "{time} 開始 x {days} ({count}日間)",
+  "newTest.multiDayRequired": "マルチデイテストは1日以上選択してください",
+  "newTest.scheduleMultiDay": "マルチデイテストを作成",
+
+  // TestDetail (追加)
+  "detail.dayProgress": "日次進捗",
+  "detail.dayLabel": "Day {current} / {total}",
+
+  // Heatmap (Feature 1)
+  "heatmap.title": "時間帯ヒートマップ",
+  "heatmap.mon": "月",
+  "heatmap.tue": "火",
+  "heatmap.wed": "水",
+  "heatmap.thu": "木",
+  "heatmap.fri": "金",
+  "heatmap.sat": "土",
+  "heatmap.sun": "日",
+
+  // Significance (Feature 2)
+  "significance.title": "統計的有意性",
+  "significance.confident": "95%+ 信頼度",
+  "significance.lowConfidence": "< 95% 信頼度",
+  "significance.insufficient": "データ不足",
+  "significance.colPair": "ペア",
+  "significance.colConfidence": "信頼度",
+  "significance.colBetter": "優位",
+
+  // Calendar (Feature 3)
+  "calendar.mon": "月",
+  "calendar.tue": "火",
+  "calendar.wed": "水",
+  "calendar.thu": "木",
+  "calendar.fri": "金",
+  "calendar.sat": "土",
+  "calendar.sun": "日",
+  "calendar.selected": "{count} / {max} 日選択中",
+
+  // Degradation (Feature 4)
+  "degradation.title": "サムネイル劣化トラッカー",
+  "degradation.trackingLabel": "トラッキング有効",
+  "degradation.xAxis": "日目",
+  "degradation.testAvg": "テスト期間平均",
+  "degradation.noData": "劣化データはまだありません",
+
+  // Cross Analysis (Feature 5)
+  "crossAnalysis.title": "クロステスト分析",
+  "crossAnalysis.totalTests": "分析対象テスト数",
+  "crossAnalysis.winRateChart": "カテゴリ別勝率",
+  "crossAnalysis.categoryTable": "カテゴリ詳細",
+  "crossAnalysis.colCategory": "カテゴリ",
+  "crossAnalysis.colCount": "出現数",
+  "crossAnalysis.colWins": "勝利数",
+  "crossAnalysis.colWinRate": "勝率",
+  "crossAnalysis.colAvgScore": "平均スコア",
+  "crossAnalysis.noData": "完了テストがないか、分類データがありません。テストを完了後に分類を実行してください。",
+  "crossAnalysis.classifyTitle": "サムネイル分類",
+  "crossAnalysis.classifyDesc": "Gemini AIでサムネイルを分類します。完了テストの「分類」ボタンを押してください。",
+  "crossAnalysis.classifyBtn": "分類",
+  "crossAnalysis.cat.human_face": "人物の顔",
+  "crossAnalysis.cat.text_heavy": "テキスト多め",
+  "crossAnalysis.cat.text_minimal": "テキスト少なめ",
+  "crossAnalysis.cat.landscape": "風景",
+  "crossAnalysis.cat.product_closeup": "商品クローズアップ",
+  "crossAnalysis.cat.high_contrast": "高コントラスト",
+  "crossAnalysis.cat.bright_colors": "明るい色",
+  "crossAnalysis.cat.dark_theme": "ダークテーマ",
+  "crossAnalysis.cat.before_after": "ビフォーアフター",
+  "crossAnalysis.cat.reaction_face": "リアクション顔",
+  "crossAnalysis.cat.arrow_indicator": "矢印",
+  "crossAnalysis.cat.number_list": "数字リスト",
+
+  // Competitor (Feature 6)
+  "competitor.title": "ライバルチャンネル分析",
+  "competitor.channelIdLabel": "チャンネルID",
+  "competitor.channelIdPlaceholder": "UCxxxxxxxx...",
+  "competitor.analyzeBtn": "分析",
+  "competitor.analyzing": "分析中...",
+  "competitor.analyzeFailed": "分析に失敗しました",
+  "competitor.videosAnalyzed": "{count}本の動画を分析",
+  "competitor.faceRate": "顔使用率",
+  "competitor.textRate": "テキスト使用率",
+  "competitor.distributionChart": "パターン分布",
+  "competitor.thumbnailGrid": "サムネイル一覧",
+  "competitor.recommendations": "AI推奨事項",
+  "competitor.history": "過去の分析",
+  "competitor.colChannel": "チャンネル",
+  "competitor.colVideos": "動画数",
+  "competitor.colDate": "日時",
+  "competitor.viewDetail": "詳細",
+
+  // Backup
+  "backup.title": "データバックアップ",
+  "backup.description": "サムネイル画像とテストデータをZIPファイルでバックアップします。",
+  "backup.proOnly": "Pro プラン限定機能",
+  "backup.proOnlyDesc": "バックアップ機能はProプランまたはトライアル期間中にご利用いただけます。",
+  "backup.createBtn": "バックアップを作成",
+  "backup.creating": "作成中...",
+  "backup.created": "{filename} を作成しました（テスト{count}件）",
+  "backup.createFailed": "バックアップの作成に失敗しました",
+  "backup.noBackups": "バックアップはまだありません",
+  "backup.colFile": "ファイル名",
+  "backup.colSize": "サイズ",
+  "backup.colDate": "作成日時",
+  "backup.download": "ダウンロード",
+  "backup.delete": "削除",
+  "backup.confirmDelete": "このバックアップを削除しますか？",
+
+  // Templates
+  "template.title": "テストテンプレート",
+  "template.description": "よく使うテスト設定をテンプレートとして保存・管理します。",
+  "template.select": "テンプレートを選択",
+  "template.none": "テンプレなし",
+  "template.saveBtn": "テンプレートとして保存",
+  "template.saveName": "テンプレート名を入力してください",
+  "template.saved": "テンプレート「{name}」を保存しました",
+  "template.saveFailed": "テンプレートの保存に失敗しました",
+  "template.colName": "名前",
+  "template.colSettings": "設定概要",
+  "template.delete": "削除",
+  "template.confirmDelete": "テンプレート「{name}」を削除しますか？",
+  "template.noTemplates": "テンプレートはまだありません",
+  "template.summary": "{patterns}枚 / {interval}分 / {cycles}サイクル",
+
+  // Report
+  "report.title": "レポートロゴ",
+  "report.description": "PDFレポートのヘッダーに表示するロゴ画像を設定します。",
+  "report.downloadBtn": "PDF レポート",
+  "report.downloading": "生成中...",
+  "report.downloadFailed": "レポートの生成に失敗しました",
+  "report.proOnly": "Pro プラン限定機能",
+  "report.proOnlyDesc": "PDFレポートはProプランまたはトライアル期間中にご利用いただけます。",
+  "report.logoUpload": "ロゴをアップロード",
+  "report.logoDelete": "ロゴを削除",
+  "report.logoUploaded": "ロゴをアップロードしました",
+  "report.logoDeleted": "ロゴを削除しました",
+  "report.logoFailed": "ロゴの操作に失敗しました",
+  "report.noLogo": "ロゴが設定されていません",
+  "report.proOnlyBadge": "Pro限定",
 };
 
 export default ja;

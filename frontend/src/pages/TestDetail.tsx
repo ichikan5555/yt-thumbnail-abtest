@@ -157,6 +157,24 @@ export default function TestDetail() {
         />
         <InfoCard label={t("detail.cycle")} value={`${test.current_cycle + 1} / ${test.cycles}`} />
         <InfoCard label={t("detail.interval")} value={`${test.rotation_interval} min`} />
+        {test.test_mode === "multi_day" && (
+          <InfoCard
+            label={t("detail.dayProgress")}
+            value={
+              <div>
+                <div className="text-sm font-medium mb-1">
+                  {t("detail.dayLabel", { current: String((test.current_day_index || 0) + 1), total: String(test.total_days || 1) })}
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-indigo-600 h-2 rounded-full"
+                    style={{ width: `${((test.current_day_index || 0) + 1) / (test.total_days || 1) * 100}%` }}
+                  />
+                </div>
+              </div>
+            }
+          />
+        )}
         {test.scheduled_start && (
           <InfoCard label={t("detail.scheduledStart")} value={new Date(test.scheduled_start).toLocaleString()} />
         )}

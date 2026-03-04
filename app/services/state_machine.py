@@ -21,6 +21,10 @@ class StateMachine:
         scheduled_start: "datetime | None" = None,
         scheduled_end: "datetime | None" = None,
         metric_weights: str | None = None,
+        test_mode: str = "single",
+        scheduled_days: str = "",
+        daily_start_time: str = "",
+        total_days: int = 1,
     ) -> ABTest:
         """Create a new A/B test with variants."""
         labels = ["A", "B", "C", "D"][:len(image_paths)]
@@ -35,6 +39,10 @@ class StateMachine:
                 scheduled_start=scheduled_start,
                 scheduled_end=scheduled_end,
                 metric_weights=metric_weights or "",
+                test_mode=test_mode,
+                scheduled_days=scheduled_days,
+                daily_start_time=daily_start_time,
+                total_days=total_days,
             )
             session.add(test)
             session.flush()
@@ -198,6 +206,36 @@ class StateMachine:
             session.commit()
             session.refresh(test)
             logger.info("Test #%d completed, winner: variant #%d", test_id, winner_variant_id)
+            return test
+        finally:
+            session.close()
+
+    def daily_pause_test(self, test_id: int) -> ABTest:
+        """Pause test between multi-day runs."""
+        session = get_session()
+        try:
+            test = session.get(ABTest, test_id)
+            test.status = TestStatus.DAILY_PAUSED
+            session.commit()
+            session.refresh(test)
+            logger.info("Test #%d daily paused (day %d/%d)", test_id, test.current_day_index + 1, test.total_days)
+            return test
+        finally:
+            session.close()
+
+    def advance_day(self, test_id: int) -> ABTest:
+        """Advance to next day in multi-day test."""
+        session = get_session()
+        try:
+            test = session.get(ABTest, test_id)
+            test.current_day_index += 1
+            test.current_cycle = 0
+            test.current_variant_index = 0
+            test.rotation_order = self._generate_rotation_order(test.id)
+            test.status = TestStatus.RUNNING
+            session.commit()
+            session.refresh(test)
+            logger.info("Test #%d advanced to day %d/%d", test_id, test.current_day_index + 1, test.total_days)
             return test
         finally:
             session.close()

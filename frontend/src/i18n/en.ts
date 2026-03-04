@@ -386,6 +386,161 @@ const en: Record<string, string> = {
   // Trial
   "trial.badge": "Trial: {days}d left",
   "trial.expired": "Trial expired",
+
+  // Status (additional)
+  "status.daily_paused": "Daily Paused",
+
+  // Navigation (additional)
+  "nav.crossAnalysis": "Cross Analysis",
+  "nav.competitor": "Competitor",
+
+  // Dashboard (additional)
+  "dashboard.multiDay": "Day {current}/{total}",
+
+  // NewTest (additional: multi-day)
+  "newTest.testModeLabel": "Test Mode",
+  "newTest.modeSingle": "Standard",
+  "newTest.modeMultiDay": "Multi-Day",
+  "newTest.multiDaySettings": "Multi-Day Settings",
+  "newTest.dailyStartTime": "Daily Start Time",
+  "newTest.multiDaySummary": "Start at {time} on {days} ({count} days)",
+  "newTest.multiDayRequired": "Select at least 1 day for multi-day test",
+  "newTest.scheduleMultiDay": "Create Multi-Day Test",
+
+  // TestDetail (additional)
+  "detail.dayProgress": "Day Progress",
+  "detail.dayLabel": "Day {current} / {total}",
+
+  // Heatmap (Feature 1)
+  "heatmap.title": "Time-of-Day Heatmap",
+  "heatmap.mon": "Mon",
+  "heatmap.tue": "Tue",
+  "heatmap.wed": "Wed",
+  "heatmap.thu": "Thu",
+  "heatmap.fri": "Fri",
+  "heatmap.sat": "Sat",
+  "heatmap.sun": "Sun",
+
+  // Significance (Feature 2)
+  "significance.title": "Statistical Significance",
+  "significance.confident": "95%+ Confidence",
+  "significance.lowConfidence": "< 95% Confidence",
+  "significance.insufficient": "Insufficient Data",
+  "significance.colPair": "Pair",
+  "significance.colConfidence": "Confidence",
+  "significance.colBetter": "Better",
+
+  // Calendar (Feature 3)
+  "calendar.mon": "Mon",
+  "calendar.tue": "Tue",
+  "calendar.wed": "Wed",
+  "calendar.thu": "Thu",
+  "calendar.fri": "Fri",
+  "calendar.sat": "Sat",
+  "calendar.sun": "Sun",
+  "calendar.selected": "{count} / {max} days selected",
+
+  // Degradation (Feature 4)
+  "degradation.title": "Thumbnail Degradation Tracker",
+  "degradation.trackingLabel": "Tracking Enabled",
+  "degradation.xAxis": "Day",
+  "degradation.testAvg": "Test Avg",
+  "degradation.noData": "No degradation data yet",
+
+  // Cross Analysis (Feature 5)
+  "crossAnalysis.title": "Cross-Test Analysis",
+  "crossAnalysis.totalTests": "Tests Analyzed",
+  "crossAnalysis.winRateChart": "Win Rate by Category",
+  "crossAnalysis.categoryTable": "Category Details",
+  "crossAnalysis.colCategory": "Category",
+  "crossAnalysis.colCount": "Count",
+  "crossAnalysis.colWins": "Wins",
+  "crossAnalysis.colWinRate": "Win Rate",
+  "crossAnalysis.colAvgScore": "Avg Score",
+  "crossAnalysis.noData": "No completed tests or classification data. Run classification on completed tests.",
+  "crossAnalysis.classifyTitle": "Thumbnail Classification",
+  "crossAnalysis.classifyDesc": "Classify thumbnails using Gemini AI. Click \"Classify\" on completed tests.",
+  "crossAnalysis.classifyBtn": "Classify",
+  "crossAnalysis.cat.human_face": "Human Face",
+  "crossAnalysis.cat.text_heavy": "Text Heavy",
+  "crossAnalysis.cat.text_minimal": "Text Minimal",
+  "crossAnalysis.cat.landscape": "Landscape",
+  "crossAnalysis.cat.product_closeup": "Product Closeup",
+  "crossAnalysis.cat.high_contrast": "High Contrast",
+  "crossAnalysis.cat.bright_colors": "Bright Colors",
+  "crossAnalysis.cat.dark_theme": "Dark Theme",
+  "crossAnalysis.cat.before_after": "Before/After",
+  "crossAnalysis.cat.reaction_face": "Reaction Face",
+  "crossAnalysis.cat.arrow_indicator": "Arrow",
+  "crossAnalysis.cat.number_list": "Number List",
+
+  // Competitor (Feature 6)
+  "competitor.title": "Competitor Channel Analysis",
+  "competitor.channelIdLabel": "Channel ID",
+  "competitor.channelIdPlaceholder": "UCxxxxxxxx...",
+  "competitor.analyzeBtn": "Analyze",
+  "competitor.analyzing": "Analyzing...",
+  "competitor.analyzeFailed": "Analysis failed",
+  "competitor.videosAnalyzed": "{count} videos analyzed",
+  "competitor.faceRate": "Face Usage Rate",
+  "competitor.textRate": "Text Usage Rate",
+  "competitor.distributionChart": "Pattern Distribution",
+  "competitor.thumbnailGrid": "Thumbnail Grid",
+  "competitor.recommendations": "AI Recommendations",
+  "competitor.history": "Past Analyses",
+  "competitor.colChannel": "Channel",
+  "competitor.colVideos": "Videos",
+  "competitor.colDate": "Date",
+  "competitor.viewDetail": "View",
+
+  // Backup
+  "backup.title": "Data Backup",
+  "backup.description": "Backup thumbnail images and test data as a ZIP file.",
+  "backup.proOnly": "Pro Plan Only",
+  "backup.proOnlyDesc": "Backup is available on the Pro plan or during the free trial.",
+  "backup.createBtn": "Create Backup",
+  "backup.creating": "Creating...",
+  "backup.created": "Created {filename} ({count} tests)",
+  "backup.createFailed": "Failed to create backup",
+  "backup.noBackups": "No backups yet",
+  "backup.colFile": "Filename",
+  "backup.colSize": "Size",
+  "backup.colDate": "Date",
+  "backup.download": "Download",
+  "backup.delete": "Delete",
+  "backup.confirmDelete": "Delete this backup?",
+
+  // Templates
+  "template.title": "Test Templates",
+  "template.description": "Save and manage frequently used test settings as templates.",
+  "template.select": "Select Template",
+  "template.none": "No template",
+  "template.saveBtn": "Save as Template",
+  "template.saveName": "Enter a template name",
+  "template.saved": "Template \"{name}\" saved",
+  "template.saveFailed": "Failed to save template",
+  "template.colName": "Name",
+  "template.colSettings": "Settings",
+  "template.delete": "Delete",
+  "template.confirmDelete": "Delete template \"{name}\"?",
+  "template.noTemplates": "No templates yet",
+  "template.summary": "{patterns} patterns / {interval}min / {cycles} cycles",
+
+  // Report
+  "report.title": "Report Logo",
+  "report.description": "Set a logo image to display in the PDF report header.",
+  "report.downloadBtn": "PDF Report",
+  "report.downloading": "Generating...",
+  "report.downloadFailed": "Failed to generate report",
+  "report.proOnly": "Pro Plan Only",
+  "report.proOnlyDesc": "PDF reports are available on the Pro plan or during the free trial.",
+  "report.logoUpload": "Upload Logo",
+  "report.logoDelete": "Delete Logo",
+  "report.logoUploaded": "Logo uploaded",
+  "report.logoDeleted": "Logo deleted",
+  "report.logoFailed": "Logo operation failed",
+  "report.noLogo": "No logo set",
+  "report.proOnlyBadge": "Pro Only",
 };
 
 export default en;

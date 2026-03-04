@@ -1,18 +1,34 @@
 import { useState, useEffect } from "react";
-import { getSettings, updateSettings } from "../api/client";
+import { getSettings, updateSettings, createBackup, listBackups, downloadBackup, deleteBackup, listTemplates, deleteTemplate, uploadLogo, deleteLogo, getLogo } from "../api/client";
 import { DEFAULT_WEIGHTS } from "../api/types";
-import type { Settings as SettingsType } from "../api/types";
+import type { Settings as SettingsType, BackupItem, TestTemplate } from "../api/types";
 import WeightSliders from "../components/WeightSliders";
 import { useT } from "../i18n/I18nContext";
+import { useAuth } from "../context/AuthContext";
 
 const CHANNEL_OPTIONS = ["chatwork", "email", "slack"] as const;
 
 export default function Settings() {
   const t = useT();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+
+  // Backup state
+  const isPro = user?.plan === "pro" || user?.trial_active === true;
+  const [backups, setBackups] = useState<BackupItem[]>([]);
+  const [backupLoading, setBackupLoading] = useState(false);
+  const [backupCreating, setBackupCreating] = useState(false);
+  const [backupMsg, setBackupMsg] = useState("");
+
+  // Template state
+  const [templates, setTemplates] = useState<TestTemplate[]>([]);
+
+  // Logo state
+  const [hasLogo, setHasLogo] = useState(false);
+  const [logoMsg, setLogoMsg] = useState("");
 
   const [rotationInterval, setRotationInterval] = useState(30);
   const [cycles, setCycles] = useState(1);
@@ -25,6 +41,15 @@ export default function Settings() {
     "email",
     "slack",
   ]);
+
+  const loadBackups = () => {
+    if (!isPro) return;
+    setBackupLoading(true);
+    listBackups()
+      .then(setBackups)
+      .catch(() => {})
+      .finally(() => setBackupLoading(false));
+  };
 
   useEffect(() => {
     getSettings()
@@ -42,6 +67,9 @@ export default function Settings() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+    loadBackups();
+    listTemplates().then(setTemplates).catch(() => {});
+    getLogo().then((s) => setHasLogo(s.has_logo)).catch(() => {});
   }, []);
 
   const toggleChannel = (ch: string) => {
@@ -195,6 +223,247 @@ export default function Settings() {
       >
         {saving ? t("settings.saving") : t("settings.save")}
       </button>
+
+      {/* Template Management Section */}
+      <section className="bg-white rounded-lg border border-gray-200 p-5 mt-6">
+        <h2 className="text-lg font-semibold text-gray-800 mb-1">
+          {t("template.title")}
+        </h2>
+        <p className="text-sm text-gray-500 mb-4">
+          {t("template.description")}
+        </p>
+
+        {templates.length === 0 ? (
+          <p className="text-gray-400 text-sm">{t("template.noTemplates")}</p>
+        ) : (
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                  {t("template.colName")}
+                </th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                  {t("template.colSettings")}
+                </th>
+                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {templates.map((tpl) => (
+                <tr key={tpl.name}>
+                  <td className="px-3 py-2 text-sm font-medium">{tpl.name}</td>
+                  <td className="px-3 py-2 text-sm text-gray-500">
+                    {t("template.summary", {
+                      patterns: String(tpl.num_patterns),
+                      interval: String(tpl.rotation_interval),
+                      cycles: String(tpl.cycles),
+                    })}
+                  </td>
+                  <td className="px-3 py-2 text-center">
+                    <button
+                      onClick={async () => {
+                        if (!confirm(t("template.confirmDelete", { name: tpl.name }))) return;
+                        await deleteTemplate(tpl.name);
+                        listTemplates().then(setTemplates).catch(() => {});
+                      }}
+                      className="text-xs text-red-500 hover:underline"
+                    >
+                      {t("template.delete")}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
+
+      {/* Backup Section */}
+      <section className="bg-white rounded-lg border border-gray-200 p-5 mt-6">
+        <h2 className="text-lg font-semibold text-gray-800 mb-1">
+          {t("backup.title")}
+        </h2>
+        <p className="text-sm text-gray-500 mb-4">
+          {t("backup.description")}
+        </p>
+
+        {!isPro ? (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
+            <p className="text-amber-700 text-sm font-medium mb-1">
+              {t("backup.proOnly")}
+            </p>
+            <p className="text-amber-600 text-xs">
+              {t("backup.proOnlyDesc")}
+            </p>
+          </div>
+        ) : (
+          <>
+            <button
+              onClick={async () => {
+                setBackupCreating(true);
+                setBackupMsg("");
+                try {
+                  const result = await createBackup();
+                  setBackupMsg(
+                    t("backup.created", {
+                      filename: result.filename,
+                      count: String(result.test_count),
+                    })
+                  );
+                  loadBackups();
+                } catch {
+                  setBackupMsg(t("backup.createFailed"));
+                } finally {
+                  setBackupCreating(false);
+                }
+              }}
+              disabled={backupCreating}
+              className="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700 disabled:opacity-50 mb-3"
+            >
+              {backupCreating
+                ? t("backup.creating")
+                : t("backup.createBtn")}
+            </button>
+
+            {backupMsg && (
+              <p className="text-sm text-gray-600 mb-3">{backupMsg}</p>
+            )}
+
+            {backupLoading ? (
+              <p className="text-gray-400 text-sm">{t("common.loading")}</p>
+            ) : backups.length === 0 ? (
+              <p className="text-gray-400 text-sm">{t("backup.noBackups")}</p>
+            ) : (
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                      {t("backup.colFile")}
+                    </th>
+                    <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                      {t("backup.colSize")}
+                    </th>
+                    <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                      {t("backup.colDate")}
+                    </th>
+                    <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {backups.map((b) => (
+                    <tr key={b.filename}>
+                      <td className="px-3 py-2 text-sm font-mono">
+                        {b.filename}
+                      </td>
+                      <td className="px-3 py-2 text-sm text-right text-gray-500">
+                        {(b.size / 1024).toFixed(1)} KB
+                      </td>
+                      <td className="px-3 py-2 text-sm text-right text-gray-500">
+                        {new Date(b.created_at).toLocaleString()}
+                      </td>
+                      <td className="px-3 py-2 text-center space-x-2">
+                        <button
+                          onClick={() => downloadBackup(b.filename)}
+                          className="text-xs text-indigo-600 hover:underline"
+                        >
+                          {t("backup.download")}
+                        </button>
+                        <button
+                          onClick={async () => {
+                            if (!confirm(t("backup.confirmDelete"))) return;
+                            await deleteBackup(b.filename);
+                            loadBackups();
+                          }}
+                          className="text-xs text-red-500 hover:underline"
+                        >
+                          {t("backup.delete")}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </>
+        )}
+      </section>
+
+      {/* Report Logo Section */}
+      <section className="bg-white rounded-lg border border-gray-200 p-5 mt-6">
+        <h2 className="text-lg font-semibold text-gray-800 mb-1">
+          {t("report.title")}
+        </h2>
+        <p className="text-sm text-gray-500 mb-4">
+          {t("report.description")}
+        </p>
+
+        {!isPro ? (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
+            <p className="text-amber-700 text-sm font-medium mb-1">
+              {t("report.proOnly")}
+            </p>
+            <p className="text-amber-600 text-xs">
+              {t("report.proOnlyDesc")}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {hasLogo ? (
+              <div className="flex items-center gap-4">
+                <img
+                  src={`/api/settings/logo/preview?t=${Date.now()}`}
+                  alt="Logo"
+                  className="h-10 border rounded"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                />
+                <button
+                  onClick={async () => {
+                    setLogoMsg("");
+                    try {
+                      await deleteLogo();
+                      setHasLogo(false);
+                      setLogoMsg(t("report.logoDeleted"));
+                    } catch {
+                      setLogoMsg(t("report.logoFailed"));
+                    }
+                  }}
+                  className="text-xs text-red-500 hover:underline"
+                >
+                  {t("report.logoDelete")}
+                </button>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-400">{t("report.noLogo")}</p>
+            )}
+            <div>
+              <label className="inline-block bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700 cursor-pointer">
+                {t("report.logoUpload")}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setLogoMsg("");
+                    try {
+                      await uploadLogo(file);
+                      setHasLogo(true);
+                      setLogoMsg(t("report.logoUploaded"));
+                    } catch {
+                      setLogoMsg(t("report.logoFailed"));
+                    }
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+            </div>
+            {logoMsg && (
+              <p className="text-sm text-gray-600">{logoMsg}</p>
+            )}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

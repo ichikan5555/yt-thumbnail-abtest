@@ -14,6 +14,8 @@ import Company from "./pages/Company";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
+import CrossAnalysis from "./pages/CrossAnalysis";
+import Competitor from "./pages/Competitor";
 
 export default function App() {
   return (
@@ -34,6 +36,8 @@ export default function App() {
           <Route path="/new" element={<NewTest />} />
           <Route path="/tests/:id" element={<TestDetail />} />
           <Route path="/tests/:id/results" element={<Results />} />
+          <Route path="/cross-analysis" element={<CrossAnalysis />} />
+          <Route path="/competitor" element={<Competitor />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/help" element={<Help />} />
         </Route>

@@ -1,5 +1,6 @@
 """APScheduler-based rotation scheduler with crash recovery."""
 
+import json
 import logging
 from datetime import datetime, timedelta
 
@@ -7,7 +8,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 from app.config import settings
 from app.database import get_session
-from app.models import ABTest, Measurement, TestStatus
+from app.models import ABTest, DegradationCheck, Measurement, TestStatus, Variant
 from app.services.analyzer import analyzer
 from app.services.notifier import notifier
 from app.services.state_machine import state_machine
@@ -209,15 +210,27 @@ class RotationScheduler:
             self._remove_job(test_id)
 
     def _finish_test(self, test_id: int) -> None:
-        """Analyze results, set winner thumbnail, notify."""
+        """Analyze results, set winner thumbnail, notify. Handle multi-day."""
         try:
+            # Check multi-day: if not last day, daily_pause and schedule next
+            session = get_session()
+            test = session.get(ABTest, test_id)
+            session.close()
+
+            if test.test_mode == "multi_day" and (test.current_day_index or 0) + 1 < (test.total_days or 1):
+                # Not the last day — daily pause and schedule next day
+                state_machine.daily_pause_test(test_id)
+                self._remove_job(test_id)
+                self._schedule_next_day(test_id)
+                return
+
+            # Final day or single test — determine winner
             result = analyzer.determine_winner(test_id)
             winner = result.winner
 
             # Set winner thumbnail permanently
             session = get_session()
             test = session.get(ABTest, test_id)
-            from app.models import Variant
             variant = session.get(Variant, winner.variant_id)
             session.close()
 
@@ -228,12 +241,154 @@ class RotationScheduler:
             notifier.notify_complete(test_id, msg)
             logger.info("Test #%d finished. Winner: %s", test_id, winner.label)
 
+            # Schedule degradation tracking (Feature 4)
+            if test.degradation_tracking:
+                self._schedule_degradation(test_id)
+
         except Exception as e:
             logger.error("Failed to finish test #%d: %s", test_id, e)
             state_machine.set_error(test_id, str(e))
             notifier.notify_error(test_id, str(e))
         finally:
             self._remove_job(test_id)
+
+    def _schedule_next_day(self, test_id: int) -> None:
+        """Schedule next day for multi-day test."""
+        session = get_session()
+        try:
+            test = session.get(ABTest, test_id)
+            days = json.loads(test.scheduled_days) if test.scheduled_days else []
+            next_index = (test.current_day_index or 0) + 1
+            if next_index >= len(days):
+                return
+
+            start_time = test.daily_start_time or "00:00"
+            next_dt = datetime.fromisoformat(f"{days[next_index]}T{start_time}:00")
+
+            self._scheduler.add_job(
+                self._resume_daily,
+                "date",
+                run_date=next_dt,
+                args=[test_id],
+                id=f"test_{test_id}_day{next_index}",
+                replace_existing=True,
+            )
+            logger.info("Scheduled test #%d day %d at %s", test_id, next_index + 1, next_dt)
+        finally:
+            session.close()
+
+    def _resume_daily(self, test_id: int) -> None:
+        """Resume a multi-day test for the next day."""
+        try:
+            state_machine.advance_day(test_id)
+            self.schedule_test(test_id)
+            logger.info("Multi-day test #%d resumed for next day", test_id)
+        except Exception as e:
+            logger.error("Failed to resume daily test #%d: %s", test_id, e)
+            state_machine.set_error(test_id, str(e))
+
+    def _schedule_degradation(self, test_id: int) -> None:
+        """Schedule 30-day degradation monitoring after test completion."""
+        self._scheduler.add_job(
+            self._degradation_check,
+            "interval",
+            hours=24,
+            args=[test_id],
+            id=f"degradation_{test_id}",
+            replace_existing=True,
+            next_run_time=datetime.utcnow() + timedelta(hours=24),
+        )
+        logger.info("Scheduled degradation tracking for test #%d", test_id)
+
+    def _degradation_check(self, test_id: int) -> None:
+        """Daily degradation check for completed test."""
+        session = get_session()
+        try:
+            test = session.get(ABTest, test_id)
+            if not test or not test.degradation_tracking:
+                self._remove_degradation_job(test_id)
+                return
+
+            # Count existing checks
+            existing = (
+                session.query(DegradationCheck)
+                .filter_by(ab_test_id=test_id)
+                .count()
+            )
+            day_number = existing + 1
+
+            if day_number > 30:
+                self._remove_degradation_job(test_id)
+                return
+
+            # Get current view count
+            try:
+                views = youtube_api.get_view_count(test.video_id, test.id)
+            except Exception as e:
+                logger.warning("Degradation check view count failed for test #%d: %s", test_id, e)
+                return
+
+            # Calculate daily views
+            prev_check = (
+                session.query(DegradationCheck)
+                .filter_by(ab_test_id=test_id)
+                .order_by(DegradationCheck.day_number.desc())
+                .first()
+            )
+            daily_views = views - prev_check.view_count if prev_check else 0
+            velocity_24h = daily_views / 24.0 if daily_views > 0 else 0.0
+
+            check = DegradationCheck(
+                ab_test_id=test_id,
+                day_number=day_number,
+                view_count=views,
+                daily_views=daily_views,
+                velocity_24h=velocity_24h,
+            )
+            session.add(check)
+
+            # Check for 3-day consecutive degradation
+            if day_number >= 3:
+                recent = (
+                    session.query(DegradationCheck)
+                    .filter_by(ab_test_id=test_id)
+                    .order_by(DegradationCheck.day_number.desc())
+                    .limit(2)
+                    .all()
+                )
+                # Get avg test velocity
+                measurements = (
+                    session.query(Measurement)
+                    .filter_by(ab_test_id=test_id)
+                    .filter(Measurement.velocity.isnot(None))
+                    .all()
+                )
+                avg_test_vel = sum(m.velocity for m in measurements) / len(measurements) if measurements else 0
+                threshold = avg_test_vel * 0.5
+
+                all_below = velocity_24h < threshold
+                for rc in recent:
+                    if rc.velocity_24h >= threshold:
+                        all_below = False
+                        break
+
+                if all_below and avg_test_vel > 0:
+                    test.degradation_alert = f"Performance dropped below 50% for 3 consecutive days (day {day_number})"
+                    logger.warning("Degradation alert for test #%d", test_id)
+
+            session.commit()
+            logger.info("Degradation check #%d for test #%d: %d daily views, %.1f v/h",
+                       day_number, test_id, daily_views, velocity_24h)
+        except Exception as e:
+            logger.error("Degradation check failed for test #%d: %s", test_id, e)
+        finally:
+            session.close()
+
+    def _remove_degradation_job(self, test_id: int) -> None:
+        try:
+            self._scheduler.remove_job(f"degradation_{test_id}")
+        except Exception:
+            pass
 
     def _remove_job(self, test_id: int) -> None:
         for suffix in ["", "_end", "_delayed"]:
@@ -296,6 +451,37 @@ class RotationScheduler:
                     # Start time has passed, start immediately
                     self._delayed_start(test.id)
                     count += 1
+
+            # Recover daily_paused multi-day tests
+            daily_paused = (
+                session.query(ABTest)
+                .filter_by(status=TestStatus.DAILY_PAUSED)
+                .all()
+            )
+            for test in daily_paused:
+                try:
+                    self._schedule_next_day(test.id)
+                    count += 1
+                    logger.info("Re-scheduled daily_paused test #%d", test.id)
+                except Exception as e:
+                    logger.error("Failed to recover daily_paused test #%d: %s", test.id, e)
+
+            # Recover degradation tracking for completed tests
+            completed_tracking = (
+                session.query(ABTest)
+                .filter_by(status=TestStatus.COMPLETED)
+                .filter(ABTest.degradation_tracking == 1)
+                .all()
+            )
+            for test in completed_tracking:
+                existing = (
+                    session.query(DegradationCheck)
+                    .filter_by(ab_test_id=test.id)
+                    .count()
+                )
+                if existing < 30:
+                    self._schedule_degradation(test.id)
+                    logger.info("Re-scheduled degradation for test #%d (day %d)", test.id, existing + 1)
         finally:
             session.close()
 

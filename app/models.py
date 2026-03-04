@@ -27,6 +27,7 @@ class TestStatus(str, enum.Enum):
     COMPLETED = "completed"
     CANCELLED = "cancelled"
     ERROR = "error"
+    DAILY_PAUSED = "daily_paused"
 
 
 class ABTest(Base):
@@ -51,6 +52,17 @@ class ABTest(Base):
     error_message = Column(Text, nullable=True)
     analytics_fetched_at = Column(DateTime, nullable=True)
 
+    # Multi-day test fields (Feature 3)
+    test_mode = Column(String(20), default="single")          # single | multi_day
+    scheduled_days = Column(Text, default="")                  # JSON: ["2026-03-05","2026-03-07"]
+    daily_start_time = Column(String(5), default="")           # "14:00"
+    current_day_index = Column(Integer, default=0)
+    total_days = Column(Integer, default=1)
+
+    # Degradation tracking (Feature 4)
+    degradation_tracking = Column(Integer, default=1)          # 1=on, 0=off
+    degradation_alert = Column(Text, nullable=True)
+
     variants = relationship("Variant", back_populates="ab_test", foreign_keys="Variant.ab_test_id")
     measurements = relationship("Measurement", back_populates="ab_test")
     winner = relationship("Variant", foreign_keys=[winner_variant_id], post_update=True)
@@ -65,6 +77,8 @@ class Variant(Base):
     image_path = Column(String(1000), nullable=False)
     total_velocity = Column(Float, default=0.0)
     measurement_count = Column(Integer, default=0)
+    thumbnail_categories = Column(Text, default="")            # JSON: ["human_face","text_heavy"]
+    categories_analyzed_at = Column(DateTime, nullable=True)
 
     ab_test = relationship("ABTest", back_populates="variants", foreign_keys=[ab_test_id])
     measurements = relationship("Measurement", back_populates="variant")
@@ -185,4 +199,31 @@ class ContactMessage(Base):
     email = Column(String(255), nullable=False)
     subject = Column(String(500), nullable=False)
     message = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class DegradationCheck(Base):
+    """Post-test daily performance check (Feature 4)."""
+    __tablename__ = "degradation_checks"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    ab_test_id = Column(Integer, ForeignKey("ab_tests.id"), nullable=False)
+    day_number = Column(Integer, nullable=False)         # 1-30
+    view_count = Column(Integer, nullable=False)
+    daily_views = Column(Integer, default=0)
+    velocity_24h = Column(Float, default=0.0)
+    checked_at = Column(DateTime, default=datetime.utcnow)
+
+    ab_test = relationship("ABTest")
+
+
+class CompetitorAnalysis(Base):
+    """Competitor channel analysis (Feature 6)."""
+    __tablename__ = "competitor_analyses"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    channel_id = Column(String(50), nullable=False)
+    channel_title = Column(String(500), default="")
+    video_count = Column(Integer, default=0)
+    analysis_result = Column(Text, default="")           # JSON
     created_at = Column(DateTime, default=datetime.utcnow)

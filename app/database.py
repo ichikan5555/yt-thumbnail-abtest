@@ -41,6 +41,15 @@ def _migrate() -> None:
         ("scheduled_end", "DATETIME"),
         ("metric_weights", "TEXT DEFAULT ''"),
         ("analytics_fetched_at", "DATETIME"),
+        # Feature 3: Multi-day
+        ("test_mode", "VARCHAR(20) DEFAULT 'single'"),
+        ("scheduled_days", "TEXT DEFAULT ''"),
+        ("daily_start_time", "VARCHAR(5) DEFAULT ''"),
+        ("current_day_index", "INTEGER DEFAULT 0"),
+        ("total_days", "INTEGER DEFAULT 1"),
+        # Feature 4: Degradation
+        ("degradation_tracking", "INTEGER DEFAULT 1"),
+        ("degradation_alert", "TEXT"),
     ]
     with engine.begin() as conn:
         for col_name, col_type in migrations:
@@ -49,6 +58,21 @@ def _migrate() -> None:
                     f"ALTER TABLE ab_tests ADD COLUMN {col_name} {col_type}"
                 ))
                 logger.info("Migration: added ab_tests.%s", col_name)
+
+    # Variant columns (Feature 5)
+    if insp.has_table("variants"):
+        v_existing = {c["name"] for c in insp.get_columns("variants")}
+        v_migrations = [
+            ("thumbnail_categories", "TEXT DEFAULT ''"),
+            ("categories_analyzed_at", "DATETIME"),
+        ]
+        with engine.begin() as conn:
+            for col_name, col_type in v_migrations:
+                if col_name not in v_existing:
+                    conn.execute(text(
+                        f"ALTER TABLE variants ADD COLUMN {col_name} {col_type}"
+                    ))
+                    logger.info("Migration: added variants.%s", col_name)
 
 
 def get_session() -> Session:

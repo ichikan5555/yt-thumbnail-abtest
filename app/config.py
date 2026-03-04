@@ -46,6 +46,9 @@ class Settings(BaseSettings):
     chatwork_auth_token: str = ""  # separate token for 2FA (personal token)
     chatwork_auth_room_id: str = ""  # room for 2FA codes
 
+    # Gemini AI (Feature 5/6)
+    gemini_api_key: str = ""
+
     # Web UI
     web_host: str = "0.0.0.0"
     web_port: int = 8888

@@ -7,6 +7,7 @@ const colors: Record<string, string> = {
   completed: "bg-blue-100 text-blue-700",
   cancelled: "bg-red-100 text-red-700",
   error: "bg-red-200 text-red-800",
+  daily_paused: "bg-purple-100 text-purple-700",
 };
 
 export default function StatusBadge({ status }: { status: string }) {

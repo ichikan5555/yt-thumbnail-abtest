@@ -6,6 +6,8 @@ import {
   Cog6ToothIcon,
   QuestionMarkCircleIcon,
   ArrowRightStartOnRectangleIcon,
+  SparklesIcon,
+  EyeIcon,
 } from "@heroicons/react/24/outline";
 import { useI18n } from "../i18n/I18nContext";
 import { useAuth } from "../context/AuthContext";
@@ -14,6 +16,8 @@ import type { Lang } from "../i18n/I18nContext";
 const navItems = [
   { to: "/", labelKey: "nav.dashboard" as const, icon: ChartBarIcon },
   { to: "/new", labelKey: "nav.newTest" as const, icon: PlusCircleIcon },
+  { to: "/cross-analysis", labelKey: "nav.crossAnalysis" as const, icon: SparklesIcon },
+  { to: "/competitor", labelKey: "nav.competitor" as const, icon: EyeIcon },
   { to: "/settings", labelKey: "nav.settings" as const, icon: Cog6ToothIcon },
   { to: "/help", labelKey: "nav.help" as const, icon: QuestionMarkCircleIcon },
 ];

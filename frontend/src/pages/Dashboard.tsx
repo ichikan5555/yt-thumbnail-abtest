@@ -100,6 +100,11 @@ export default function Dashboard() {
                   <td className="px-5 py-4 text-sm max-w-sm">
                     <div className="font-medium text-gray-900 truncate">
                       {test.video_title || test.video_id}
+                      {test.test_mode === "multi_day" && (
+                        <span className="ml-2 px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded text-[10px] font-medium">
+                          {t("dashboard.multiDay", { current: String((test.current_day_index || 0) + 1), total: String(test.total_days || 1) })}
+                        </span>
+                      )}
                     </div>
                   </td>
                   <td className="px-5 py-4">
