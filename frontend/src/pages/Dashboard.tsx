@@ -53,7 +53,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-4xl space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">{t("dashboard.title")}</h1>
         <Link
@@ -69,75 +69,51 @@ export default function Dashboard() {
           {t("dashboard.empty")}
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  {t("dashboard.colDate")}
-                </th>
-                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  {t("dashboard.colVideo")}
-                </th>
-                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  {t("dashboard.colStatus")}
-                </th>
-                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  {t("dashboard.colResult")}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {tests.map((test) => (
-                <tr
-                  key={test.id}
-                  onClick={() => navigate(`/tests/${test.id}`)}
-                  className="hover:bg-indigo-50 cursor-pointer transition-colors"
-                >
-                  <td className="px-5 py-4 text-sm text-gray-700 whitespace-nowrap">
-                    {getDateDisplay(test)}
-                  </td>
-                  <td className="px-5 py-4 text-sm max-w-sm">
-                    <div className="font-medium text-gray-900 truncate">
-                      {test.video_title || test.video_id}
-                      {test.test_mode === "multi_day" && (
-                        <span className="ml-2 px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded text-[10px] font-medium">
-                          {t("dashboard.multiDay", { current: String((test.current_day_index || 0) + 1), total: String(test.total_days || 1) })}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-5 py-4">
-                    <StatusBadge status={test.status} />
-                  </td>
-                  <td className="px-5 py-4 text-sm">
-                    {test.status === "completed" && test.winner_label ? (
-                      <div className="flex items-center gap-3">
-                        <span className="text-green-700 font-semibold">
-                          {t("dashboard.winnerIs", { label: test.winner_label })}
-                        </span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/tests/${test.id}/results`);
-                          }}
-                          className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded text-xs font-medium hover:bg-indigo-200 transition-colors"
-                        >
-                          {t("dashboard.viewResults")}
-                        </button>
-                      </div>
-                    ) : test.status === "running" ? (
-                      <span className="text-blue-600 text-xs">{t("dashboard.inProgress")}</span>
-                    ) : test.status === "pending" ? (
-                      <span className="text-gray-400 text-xs">-</span>
-                    ) : (
-                      <span className="text-gray-400 text-xs">-</span>
+        <div className="space-y-3">
+          {tests.map((test) => (
+            <div
+              key={test.id}
+              onClick={() => navigate(`/tests/${test.id}`)}
+              className="bg-white rounded-lg shadow p-4 hover:bg-indigo-50 cursor-pointer transition-colors"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium text-gray-900 truncate">
+                    {test.video_title || test.video_id}
+                    {test.test_mode === "multi_day" && (
+                      <span className="ml-2 px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded text-[10px] font-medium">
+                        {t("dashboard.multiDay", { current: String((test.current_day_index || 0) + 1), total: String(test.total_days || 1) })}
+                      </span>
                     )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                  <div className="flex items-center gap-3 mt-1.5">
+                    <span className="text-xs text-gray-500">{getDateDisplay(test)}</span>
+                    <StatusBadge status={test.status} />
+                  </div>
+                </div>
+                <div className="flex-shrink-0">
+                  {test.status === "completed" && test.winner_label ? (
+                    <div className="text-right">
+                      <span className="text-green-700 font-semibold text-sm block">
+                        {t("dashboard.winnerIs", { label: test.winner_label })}
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/tests/${test.id}/results`);
+                        }}
+                        className="mt-1 bg-indigo-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-indigo-700 transition-colors"
+                      >
+                        {t("dashboard.viewResults")}
+                      </button>
+                    </div>
+                  ) : test.status === "running" ? (
+                    <span className="text-blue-600 text-xs">{t("dashboard.inProgress")}</span>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

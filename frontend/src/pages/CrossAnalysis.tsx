@@ -58,7 +58,7 @@ export default function CrossAnalysis() {
   })) ?? [];
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-3xl space-y-6">
       <h1 className="text-2xl font-bold">{t("crossAnalysis.title")}</h1>
 
       {data && data.total_tests > 0 ? (
@@ -84,35 +84,21 @@ export default function CrossAnalysis() {
             </div>
           )}
 
-          {/* Category table */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-200">
-              <h2 className="font-semibold">{t("crossAnalysis.categoryTable")}</h2>
+          {/* Category cards */}
+          <div className="bg-white rounded-lg shadow p-4">
+            <h2 className="font-semibold mb-3">{t("crossAnalysis.categoryTable")}</h2>
+            <div className="space-y-2">
+              {data.categories.map((c) => (
+                <div key={c.category} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                  <span className="text-sm font-medium">{t(`crossAnalysis.cat.${c.category}`)}</span>
+                  <div className="flex items-center gap-4 text-sm">
+                    <span className="text-gray-500">{c.count}{t("crossAnalysis.colCount")}</span>
+                    <span className="text-gray-500">{c.wins}{t("crossAnalysis.colWins")}</span>
+                    <span className="font-mono font-semibold text-indigo-600 w-14 text-right">{c.win_rate}%</span>
+                  </div>
+                </div>
+              ))}
             </div>
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">{t("crossAnalysis.colCategory")}</th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">{t("crossAnalysis.colCount")}</th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">{t("crossAnalysis.colWins")}</th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">{t("crossAnalysis.colWinRate")}</th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">{t("crossAnalysis.colAvgScore")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {data.categories.map((c) => (
-                  <tr key={c.category}>
-                    <td className="px-4 py-2 text-sm font-medium">
-                      {t(`crossAnalysis.cat.${c.category}`)}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-right">{c.count}</td>
-                    <td className="px-4 py-2 text-sm text-right">{c.wins}</td>
-                    <td className="px-4 py-2 text-sm text-right font-mono">{c.win_rate}%</td>
-                    <td className="px-4 py-2 text-sm text-right font-mono">{c.avg_score.toFixed(1)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </div>
         </>
       ) : (
@@ -128,12 +114,12 @@ export default function CrossAnalysis() {
           <p className="text-sm text-gray-500 mb-3">{t("crossAnalysis.classifyDesc")}</p>
           <div className="space-y-2">
             {tests.map((test) => (
-              <div key={test.id} className="flex items-center justify-between py-1">
-                <span className="text-sm">#{test.id} — {test.video_title || test.video_id}</span>
+              <div key={test.id} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
+                <span className="text-sm truncate flex-1 min-w-0">#{test.id} — {test.video_title || test.video_id}</span>
                 <button
                   onClick={() => handleClassify(test.id)}
                   disabled={classifying === test.id}
-                  className="text-xs bg-indigo-100 text-indigo-700 px-3 py-1 rounded hover:bg-indigo-200 disabled:opacity-50"
+                  className="flex-shrink-0 text-xs bg-indigo-600 text-white px-3 py-1.5 rounded hover:bg-indigo-700 disabled:opacity-50"
                 >
                   {classifying === test.id ? t("common.loading") : t("crossAnalysis.classifyBtn")}
                 </button>

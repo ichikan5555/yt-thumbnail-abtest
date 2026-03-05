@@ -72,7 +72,7 @@ export default function Competitor() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-3xl space-y-6">
       <h1 className="text-2xl font-bold">{t("competitor.title")}</h1>
 
       {/* Input */}
@@ -80,22 +80,20 @@ export default function Competitor() {
         <label className="block text-sm font-medium text-gray-700 mb-2">
           {t("competitor.channelIdLabel")}
         </label>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={channelId}
-            onChange={(e) => setChannelId(e.target.value)}
-            placeholder={t("competitor.channelIdPlaceholder")}
-            className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-          />
-          <button
-            onClick={handleAnalyze}
-            disabled={analyzing || !channelId.trim()}
-            className="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700 disabled:opacity-50"
-          >
-            {analyzing ? t("competitor.analyzing") : t("competitor.analyzeBtn")}
-          </button>
-        </div>
+        <input
+          type="text"
+          value={channelId}
+          onChange={(e) => setChannelId(e.target.value)}
+          placeholder={t("competitor.channelIdPlaceholder")}
+          className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+        />
+        <button
+          onClick={handleAnalyze}
+          disabled={analyzing || !channelId.trim()}
+          className="mt-3 w-full bg-indigo-600 text-white px-4 py-2.5 rounded text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
+        >
+          {analyzing ? t("competitor.analyzing") : t("competitor.analyzeBtn")}
+        </button>
         {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
       </div>
 
@@ -142,7 +140,7 @@ export default function Competitor() {
           {result.videos && result.videos.length > 0 && (
             <div className="bg-white rounded-lg shadow p-4">
               <h2 className="font-semibold mb-3">{t("competitor.thumbnailGrid")}</h2>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 {result.videos.map((v) => (
                   <div key={v.video_id} className="space-y-1">
                     {v.thumbnail_url && (
@@ -188,39 +186,26 @@ export default function Competitor() {
 
       {/* History */}
       {history.length > 0 && (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-200">
-            <h2 className="font-semibold">{t("competitor.history")}</h2>
+        <div className="bg-white rounded-lg shadow p-4">
+          <h2 className="font-semibold mb-3">{t("competitor.history")}</h2>
+          <div className="space-y-2">
+            {history.map((h) => (
+              <div key={h.id} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-medium truncate block">{h.channel_title || h.channel_id}</span>
+                  <span className="text-xs text-gray-500">
+                    {h.video_count} videos &middot; {h.created_at ? new Date(h.created_at).toLocaleDateString() : "-"}
+                  </span>
+                </div>
+                <button
+                  onClick={() => handleViewHistory(h.id)}
+                  className="flex-shrink-0 text-xs bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded hover:bg-indigo-200"
+                >
+                  {t("competitor.viewDetail")}
+                </button>
+              </div>
+            ))}
           </div>
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">{t("competitor.colChannel")}</th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">{t("competitor.colVideos")}</th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">{t("competitor.colDate")}</th>
-                <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {history.map((h) => (
-                <tr key={h.id}>
-                  <td className="px-4 py-2 text-sm font-medium">{h.channel_title || h.channel_id}</td>
-                  <td className="px-4 py-2 text-sm text-right">{h.video_count}</td>
-                  <td className="px-4 py-2 text-sm text-right text-gray-500">
-                    {h.created_at ? new Date(h.created_at).toLocaleDateString() : "-"}
-                  </td>
-                  <td className="px-4 py-2 text-center">
-                    <button
-                      onClick={() => handleViewHistory(h.id)}
-                      className="text-xs text-indigo-600 hover:underline"
-                    >
-                      {t("competitor.viewDetail")}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       )}
     </div>
