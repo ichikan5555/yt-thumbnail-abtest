@@ -5,6 +5,7 @@
   "framework": "vite",
   "rewrites": [
     { "source": "/api/:path*", "destination": "https://robust-stillness-production-2948.up.railway.app/api/:path*" },
-    { "source": "/thumbnails/:path*", "destination": "https://robust-stillness-production-2948.up.railway.app/thumbnails/:path*" }
+    { "source": "/thumbnails/:path*", "destination": "https://robust-stillness-production-2948.up.railway.app/thumbnails/:path*" },
+    { "source": "/((?!api|thumbnails).*)", "destination": "/index.html" }
   ]
 }
