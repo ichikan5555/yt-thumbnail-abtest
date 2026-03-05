@@ -13,6 +13,17 @@ const sections: AccordionItem[] = [
     contentKeys: ["help.gettingStartedContent"],
   },
   {
+    titleKey: "help.youtubeConnect",
+    contentKeys: [
+      "help.youtubeConnectStep1",
+      "help.youtubeConnectStep2",
+      "help.youtubeConnectStep3",
+      "help.youtubeConnectStep4",
+      "help.youtubeConnectStep5",
+      "help.youtubeConnectStep6",
+    ],
+  },
+  {
     titleKey: "help.createTest",
     contentKeys: [
       "help.createTestStep1",
@@ -23,8 +34,55 @@ const sections: AccordionItem[] = [
     ],
   },
   {
+    titleKey: "help.duringTest",
+    contentKeys: [
+      "help.duringTestContent",
+      "help.duringTestPause",
+      "help.duringTestCancel",
+      "help.duringTestTimer",
+    ],
+  },
+  {
     titleKey: "help.readResults",
     contentKeys: ["help.readResultsContent"],
+  },
+  {
+    titleKey: "help.resultsDetail",
+    contentKeys: [
+      "help.resultsHeatmap",
+      "help.resultsSignificance",
+      "help.resultsDegradation",
+      "help.resultsComposite",
+      "help.resultsPdf",
+    ],
+  },
+  {
+    titleKey: "help.crossAnalysis",
+    contentKeys: [
+      "help.crossAnalysisContent",
+      "help.crossAnalysisStep1",
+      "help.crossAnalysisStep2",
+      "help.crossAnalysisStep3",
+    ],
+  },
+  {
+    titleKey: "help.competitor",
+    contentKeys: [
+      "help.competitorContent",
+      "help.competitorStep1",
+      "help.competitorStep2",
+      "help.competitorStep3",
+      "help.competitorStep4",
+    ],
+  },
+  {
+    titleKey: "help.templates",
+    contentKeys: [
+      "help.templatesContent",
+      "help.templatesStep1",
+      "help.templatesStep2",
+      "help.templatesStep3",
+    ],
   },
   {
     titleKey: "help.notifications",
@@ -33,6 +91,15 @@ const sections: AccordionItem[] = [
   {
     titleKey: "help.settings",
     contentKeys: ["help.settingsContent"],
+  },
+  {
+    titleKey: "help.backup",
+    contentKeys: [
+      "help.backupContent",
+      "help.backupStep1",
+      "help.backupStep2",
+      "help.backupStep3",
+    ],
   },
   {
     titleKey: "help.faq",
@@ -45,6 +112,14 @@ const sections: AccordionItem[] = [
       "help.faqAccuracyAnswer",
       "help.faqPatterns",
       "help.faqPatternsAnswer",
+      "help.faqMultiDay",
+      "help.faqMultiDayAnswer",
+      "help.faqSignificance",
+      "help.faqSignificanceAnswer",
+      "help.faqYouTube",
+      "help.faqYouTubeAnswer",
+      "help.faqTemplate",
+      "help.faqTemplateAnswer",
     ],
   },
 ];
