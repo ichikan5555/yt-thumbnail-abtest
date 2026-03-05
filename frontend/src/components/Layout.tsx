@@ -22,9 +22,9 @@ const navItems = [
   { to: "/help", labelKey: "nav.help" as const, icon: QuestionMarkCircleIcon },
 ];
 
-const langOptions: { value: Lang; flag: string }[] = [
-  { value: "ja", flag: "🇯🇵" },
-  { value: "en", flag: "🇬🇧" },
+const langOptions: { value: Lang; label: string }[] = [
+  { value: "ja", label: "JPN" },
+  { value: "en", label: "ENG" },
 ];
 
 export default function Layout() {
@@ -97,7 +97,7 @@ export default function Layout() {
                       : "text-gray-400 hover:bg-gray-800"
                   }`}
                 >
-                  {opt.flag}
+                  {opt.label}
                 </button>
               ))}
             </div>

@@ -7,9 +7,9 @@ import type { Lang } from "../i18n/I18nContext";
 
 type Step = "choose" | "password" | "2fa_send" | "2fa_verify";
 
-const langOptions: { value: Lang; flag: string }[] = [
-  { value: "ja", flag: "🇯🇵" },
-  { value: "en", flag: "🇬🇧" },
+const langOptions: { value: Lang; label: string }[] = [
+  { value: "ja", label: "JPN" },
+  { value: "en", label: "ENG" },
 ];
 
 export default function Login() {
@@ -94,7 +94,7 @@ export default function Login() {
               onClick={() => setLang(opt.value)}
               className={`px-2 py-0.5 rounded-full text-xs ${lang === opt.value ? "bg-indigo-600 text-white" : "text-gray-500"}`}
             >
-              {opt.flag}
+              {opt.label}
             </button>
           ))}
         </div>

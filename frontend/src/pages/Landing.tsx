@@ -14,9 +14,9 @@ import {
 import { useI18n } from "../i18n/I18nContext";
 import type { Lang } from "../i18n/I18nContext";
 
-const langOptions: { value: Lang; flag: string }[] = [
-  { value: "ja", flag: "🇯🇵" },
-  { value: "en", flag: "🇬🇧" },
+const langOptions: { value: Lang; label: string }[] = [
+  { value: "ja", label: "JPN" },
+  { value: "en", label: "ENG" },
 ];
 
 /* ─── Feature cards config ─── */
@@ -78,7 +78,7 @@ export default function Landing() {
                     lang === opt.value ? "bg-indigo-600 text-white" : "text-gray-500 hover:bg-gray-100"
                   }`}
                 >
-                  {opt.flag}
+                  {opt.label}
                 </button>
               ))}
             </div>

@@ -5,9 +5,9 @@ import { useAuth } from "../context/AuthContext";
 import { useI18n } from "../i18n/I18nContext";
 import type { Lang } from "../i18n/I18nContext";
 
-const langOptions: { value: Lang; flag: string }[] = [
-  { value: "ja", flag: "\u{1F1EF}\u{1F1F5}" },
-  { value: "en", flag: "\u{1F1EC}\u{1F1E7}" },
+const langOptions: { value: Lang; label: string }[] = [
+  { value: "ja", label: "JPN" },
+  { value: "en", label: "ENG" },
 ];
 
 export default function Register() {
@@ -66,7 +66,7 @@ export default function Register() {
               onClick={() => setLang(opt.value)}
               className={`px-2 py-0.5 rounded-full text-xs ${lang === opt.value ? "bg-indigo-600 text-white" : "text-gray-500"}`}
             >
-              {opt.flag}
+              {opt.label}
             </button>
           ))}
         </div>
