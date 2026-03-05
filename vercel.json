@@ -3,7 +3,7 @@
   "outputDirectory": "frontend/dist",
   "framework": "vite",
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://RAILWAY_URL/api/:path*" },
-    { "source": "/thumbnails/:path*", "destination": "https://RAILWAY_URL/thumbnails/:path*" }
+    { "source": "/api/:path*", "destination": "https://robust-stillness-production-2948.up.railway.app/api/:path*" },
+    { "source": "/thumbnails/:path*", "destination": "https://robust-stillness-production-2948.up.railway.app/thumbnails/:path*" }
   ]
 }
