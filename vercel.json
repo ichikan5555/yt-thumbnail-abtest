@@ -1,6 +1,7 @@
 {
-  "buildCommand": "cd frontend && npm run build",
+  "buildCommand": "cd frontend && npm ci && npm run build",
   "outputDirectory": "frontend/dist",
+  "installCommand": "echo skip",
   "framework": "vite",
   "rewrites": [
     { "source": "/api/:path*", "destination": "https://robust-stillness-production-2948.up.railway.app/api/:path*" },
