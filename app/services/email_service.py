@@ -15,10 +15,11 @@ class EmailService:
 
     @property
     def enabled(self) -> bool:
-        return bool(self.api_key and self.from_email and self.to_email)
+        return bool(self.api_key and self.from_email)
 
-    def send_email(self, subject: str, body: str) -> bool:
-        if not self.enabled:
+    def send_email(self, subject: str, body: str, to_email: str | None = None) -> bool:
+        recipient = to_email or self.to_email
+        if not self.enabled or not recipient:
             logger.debug("SendGrid not configured, skipping")
             return False
 
@@ -28,7 +29,7 @@ class EmailService:
 
             message = Mail(
                 from_email=self.from_email,
-                to_emails=self.to_email,
+                to_emails=recipient,
                 subject=subject,
                 plain_text_content=body,
             )

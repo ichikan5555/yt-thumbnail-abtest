@@ -3,11 +3,12 @@
 import json
 import logging
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from app.api.schemas import SettingsOut, SettingsUpdate
+from app.api.deps import get_current_user
 from app.database import get_session
-from app.models import UserSettings
+from app.models import User, UserSettings
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/settings", tags=["settings"])
@@ -23,11 +24,11 @@ DEFAULTS: dict[str, str] = {
 }
 
 
-def _get_all_settings() -> dict[str, str]:
-    """Load all settings from DB, merged with defaults."""
+def _get_all_settings(user_id: int) -> dict[str, str]:
+    """Load all settings from DB for a user, merged with defaults."""
     session = get_session()
     try:
-        rows = session.query(UserSettings).all()
+        rows = session.query(UserSettings).filter_by(user_id=user_id).all()
         db_vals = {r.key: r.value for r in rows}
         return {k: db_vals.get(k, v) for k, v in DEFAULTS.items()}
     finally:
@@ -48,13 +49,13 @@ def _to_settings_out(raw: dict[str, str]) -> SettingsOut:
 
 
 @router.get("", response_model=SettingsOut)
-def get_settings():
-    raw = _get_all_settings()
+def get_settings(user: User = Depends(get_current_user)):
+    raw = _get_all_settings(user.id)
     return _to_settings_out(raw)
 
 
 @router.put("", response_model=SettingsOut)
-def update_settings(body: SettingsUpdate):
+def update_settings(body: SettingsUpdate, user: User = Depends(get_current_user)):
     session = get_session()
     try:
         updates: dict[str, str] = {}
@@ -72,27 +73,29 @@ def update_settings(body: SettingsUpdate):
             updates["notification_channels"] = json.dumps(body.notification_channels)
 
         for key, value in updates.items():
-            row = session.query(UserSettings).filter_by(key=key).first()
+            row = session.query(UserSettings).filter_by(user_id=user.id, key=key).first()
             if row:
                 row.value = value
             else:
-                session.add(UserSettings(key=key, value=value))
+                session.add(UserSettings(user_id=user.id, key=key, value=value))
         session.commit()
 
-        raw = {r.key: r.value for r in session.query(UserSettings).all()}
+        raw = {r.key: r.value for r in session.query(UserSettings).filter_by(user_id=user.id).all()}
         merged = {k: raw.get(k, v) for k, v in DEFAULTS.items()}
         return _to_settings_out(merged)
     finally:
         session.close()
 
 
-def get_setting_value(key: str) -> str | None:
+def get_setting_value(key: str, user_id: int | None = None) -> str | None:
     """Helper to get a single setting value (used by other modules)."""
     session = get_session()
     try:
-        row = session.query(UserSettings).filter_by(key=key).first()
-        if row:
-            return row.value
+        if user_id is not None:
+            row = session.query(UserSettings).filter_by(user_id=user_id, key=key).first()
+            if row:
+                return row.value
+        # Fallback to default
         return DEFAULTS.get(key)
     finally:
         session.close()

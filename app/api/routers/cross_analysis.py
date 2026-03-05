@@ -4,10 +4,11 @@ import json
 import logging
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
+from app.api.deps import get_current_user, verify_test_ownership
 from app.database import get_session
-from app.models import ABTest, Variant, TestStatus
+from app.models import ABTest, User, Variant, TestStatus
 from app.services.gemini_service import gemini_service
 
 logger = logging.getLogger(__name__)
@@ -15,13 +16,13 @@ router = APIRouter(prefix="/api/cross-analysis", tags=["cross-analysis"])
 
 
 @router.get("")
-def get_cross_analysis():
-    """Aggregate category stats across all completed tests."""
+def get_cross_analysis(user: User = Depends(get_current_user)):
+    """Aggregate category stats across user's completed tests."""
     session = get_session()
     try:
         completed_tests = (
             session.query(ABTest)
-            .filter_by(status=TestStatus.COMPLETED)
+            .filter_by(status=TestStatus.COMPLETED, user_id=user.id)
             .all()
         )
 
@@ -77,13 +78,11 @@ def get_cross_analysis():
 
 
 @router.post("/classify/{test_id}")
-def classify_test_thumbnails(test_id: int):
+def classify_test_thumbnails(test_id: int, user: User = Depends(get_current_user)):
     """Classify all thumbnails for a test using Gemini Vision."""
     session = get_session()
     try:
-        test = session.get(ABTest, test_id)
-        if not test:
-            raise HTTPException(404, "Test not found")
+        verify_test_ownership(test_id, user.id, session)
 
         variants = session.query(Variant).filter_by(ab_test_id=test_id).all()
         results = []

@@ -306,6 +306,9 @@ const en: Record<string, string> = {
   "register.passwordMismatch": "Passwords do not match",
   "register.chatworkRoomId": "Chatwork Room ID",
   "register.chatworkRoomHint": "Enter the room ID where you want to receive verification codes",
+  "register.chatworkToken": "Chatwork API Token",
+  "register.chatworkTokenHint": "Get it from Chatwork admin → API settings",
+  "register.chatworkTokenRequired": "Chatwork API Token is required for Chatwork 2FA",
   "register.chatworkRoomRequired": "Chatwork Room ID is required for Chatwork 2FA",
   "register.submit": "Create Account",
   "register.creating": "Creating...",
@@ -526,6 +529,39 @@ const en: Record<string, string> = {
   "template.noTemplates": "No templates yet",
   "template.summary": "{patterns} patterns / {interval}min / {cycles} cycles",
 
+  // YouTube Connection
+  "youtube.title": "YouTube Connection",
+  "youtube.description": "To use the YouTube Data API, create OAuth2 credentials in Google Cloud Console and enter them here.",
+  "youtube.clientId": "Client ID",
+  "youtube.clientSecret": "Client Secret",
+  "youtube.clientIdPlaceholder": "xxxx.apps.googleusercontent.com",
+  "youtube.clientSecretPlaceholder": "GOCSPX-xxxx",
+  "youtube.saveCredentials": "Save Credentials",
+  "youtube.saving": "Saving...",
+  "youtube.connect": "Connect YouTube Account",
+  "youtube.connecting": "Connecting...",
+  "youtube.disconnect": "Disconnect",
+  "youtube.connected": "Connected: {channel}",
+  "youtube.connectedAt": "Connected at: {date}",
+  "youtube.notConnected": "Not connected",
+  "youtube.credentialsSaved": "Credentials saved",
+  "youtube.justConnected": "YouTube account connected successfully",
+
+  // Weight Presets
+  "preset.title": "Scoring Criteria",
+  "preset.balanced": "Balanced (Recommended)",
+  "preset.balancedDesc": "Evaluate all metrics with balanced weights",
+  "preset.ctrFocused": "CTR Focused",
+  "preset.ctrFocusedDesc": "Prioritize click-through rate and impressions",
+  "preset.retentionFocused": "Retention Focused",
+  "preset.retentionFocusedDesc": "Prioritize watch time and view percentage",
+  "preset.custom": "Custom",
+  "preset.customDesc": "Adjust all 9 metrics individually",
+
+  // NewTest (YouTube warning)
+  "newTest.youtubeNotConnected": "YouTube API is not connected. Connection is required to run tests.",
+  "newTest.goToSettings": "Go to Settings",
+
   // Report
   "report.title": "Report Logo",
   "report.description": "Set a logo image to display in the PDF report header.",
@@ -541,6 +577,24 @@ const en: Record<string, string> = {
   "report.logoFailed": "Logo operation failed",
   "report.noLogo": "No logo set",
   "report.proOnlyBadge": "Pro Only",
+
+  // Auth Method Settings
+  "settings.authMethod": "Authentication Method",
+  "settings.authMethodDesc": "Change how you log in to your account.",
+  "settings.currentMethod": "Current Method",
+  "settings.changeMethod": "Change Authentication Method",
+  "settings.methodPassword": "Password",
+  "settings.methodPasswordDesc": "Log in with email and password",
+  "settings.method2faEmail": "Two-Factor (Email)",
+  "settings.method2faEmailDesc": "Receive a verification code via email when logging in",
+  "settings.method2faChatwork": "Two-Factor (Chatwork)",
+  "settings.method2faChatworkDesc": "Receive a verification code via Chatwork when logging in",
+  "settings.newPassword": "New Password",
+  "settings.newPasswordConfirm": "Confirm New Password",
+  "settings.authMethodSaved": "Authentication method updated",
+  "settings.authMethodFailed": "Failed to update authentication method",
+  "settings.authMethodSaving": "Saving...",
+  "settings.authMethodSave": "Save Authentication Method",
 };
 
 export default en;

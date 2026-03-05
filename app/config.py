@@ -53,6 +53,8 @@ class Settings(BaseSettings):
     web_host: str = "0.0.0.0"
     web_port: int = 8888
     thumbnail_upload_dir: Path = BASE_DIR / "data" / "thumbnails"
+    base_url: str = "http://localhost:8888"
+    cors_origins: str = "http://localhost:5173"
 
     # Logging
     log_level: str = "INFO"

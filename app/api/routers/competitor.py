@@ -3,11 +3,12 @@
 import json
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from app.api.deps import get_current_user
 from app.database import get_session
-from app.models import CompetitorAnalysis
+from app.models import CompetitorAnalysis, User
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/competitor", tags=["competitor"])
@@ -18,11 +19,11 @@ class AnalyzeRequest(BaseModel):
 
 
 @router.post("/analyze")
-def analyze_competitor(req: AnalyzeRequest):
+def analyze_competitor(req: AnalyzeRequest, user: User = Depends(get_current_user)):
     """Run competitor channel analysis."""
     from app.services.competitor_service import competitor_service
     try:
-        result = competitor_service.analyze_channel(req.channel_id)
+        result = competitor_service.analyze_channel(req.channel_id, user_id=user.id)
         return result
     except ValueError as e:
         raise HTTPException(400, str(e))
@@ -32,12 +33,13 @@ def analyze_competitor(req: AnalyzeRequest):
 
 
 @router.get("/history")
-def get_history():
-    """List past competitor analyses."""
+def get_history(user: User = Depends(get_current_user)):
+    """List past competitor analyses for current user."""
     session = get_session()
     try:
         analyses = (
             session.query(CompetitorAnalysis)
+            .filter_by(user_id=user.id)
             .order_by(CompetitorAnalysis.id.desc())
             .limit(20)
             .all()
@@ -57,13 +59,15 @@ def get_history():
 
 
 @router.get("/{analysis_id}")
-def get_analysis(analysis_id: int):
+def get_analysis(analysis_id: int, user: User = Depends(get_current_user)):
     """Get a specific competitor analysis."""
     session = get_session()
     try:
         a = session.get(CompetitorAnalysis, analysis_id)
         if not a:
             raise HTTPException(404, "Analysis not found")
+        if a.user_id is not None and a.user_id != user.id:
+            raise HTTPException(403, "Access denied")
         result = json.loads(a.analysis_result) if a.analysis_result else {}
         result["id"] = a.id
         result["created_at"] = a.created_at.isoformat() if a.created_at else None

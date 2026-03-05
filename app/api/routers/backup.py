@@ -41,8 +41,8 @@ def create_backup(user: User = Depends(get_current_user)):
 
     session = get_session()
     try:
-        # Gather test data
-        tests = session.query(ABTest).order_by(ABTest.id).all()
+        # Gather test data (only user's tests)
+        tests = session.query(ABTest).filter_by(user_id=user.id).order_by(ABTest.id).all()
         export_data = []
         for t in tests:
             variants_data = []

@@ -306,6 +306,9 @@ const ja: Record<string, string> = {
   "register.passwordMismatch": "パスワードが一致しません",
   "register.chatworkRoomId": "Chatwork ルームID",
   "register.chatworkRoomHint": "認証コードを受け取るルームのIDを入力してください",
+  "register.chatworkToken": "Chatwork APIトークン",
+  "register.chatworkTokenHint": "Chatwork管理画面 → API設定 で取得できます",
+  "register.chatworkTokenRequired": "Chatwork認証にはAPIトークンが必要です",
   "register.chatworkRoomRequired": "Chatwork認証にはルームIDが必要です",
   "register.submit": "登録する",
   "register.creating": "登録中...",
@@ -526,6 +529,39 @@ const ja: Record<string, string> = {
   "template.noTemplates": "テンプレートはまだありません",
   "template.summary": "{patterns}枚 / {interval}分 / {cycles}サイクル",
 
+  // YouTube接続
+  "youtube.title": "YouTube接続",
+  "youtube.description": "YouTube Data APIを使用するには、Google Cloud ConsoleでOAuth2認証情報を作成し、ここに入力してください。",
+  "youtube.clientId": "Client ID",
+  "youtube.clientSecret": "Client Secret",
+  "youtube.clientIdPlaceholder": "xxxx.apps.googleusercontent.com",
+  "youtube.clientSecretPlaceholder": "GOCSPX-xxxx",
+  "youtube.saveCredentials": "認証情報を保存",
+  "youtube.saving": "保存中...",
+  "youtube.connect": "YouTubeアカウントを接続",
+  "youtube.connecting": "接続中...",
+  "youtube.disconnect": "接続を解除",
+  "youtube.connected": "接続済み: {channel}",
+  "youtube.connectedAt": "接続日時: {date}",
+  "youtube.notConnected": "未接続",
+  "youtube.credentialsSaved": "認証情報を保存しました",
+  "youtube.justConnected": "YouTubeアカウントの接続が完了しました",
+
+  // ウエイトプリセット
+  "preset.title": "判定基準",
+  "preset.balanced": "おすすめ（バランス）",
+  "preset.balancedDesc": "すべての指標をバランスよく評価します",
+  "preset.ctrFocused": "CTR重視",
+  "preset.ctrFocusedDesc": "クリック率と表示回数を重視します",
+  "preset.retentionFocused": "視聴維持重視",
+  "preset.retentionFocusedDesc": "視聴時間と視聴率を重視します",
+  "preset.custom": "カスタム",
+  "preset.customDesc": "9つの指標を個別に調整します",
+
+  // NewTest (YouTube警告)
+  "newTest.youtubeNotConnected": "YouTube APIが未接続です。テストを実行するには接続が必要です。",
+  "newTest.goToSettings": "設定ページへ",
+
   // Report
   "report.title": "レポートロゴ",
   "report.description": "PDFレポートのヘッダーに表示するロゴ画像を設定します。",
@@ -541,6 +577,24 @@ const ja: Record<string, string> = {
   "report.logoFailed": "ロゴの操作に失敗しました",
   "report.noLogo": "ロゴが設定されていません",
   "report.proOnlyBadge": "Pro限定",
+
+  // 認証方式設定
+  "settings.authMethod": "認証方式",
+  "settings.authMethodDesc": "ログイン時の認証方式を変更できます。",
+  "settings.currentMethod": "現在の認証方式",
+  "settings.changeMethod": "認証方式を変更",
+  "settings.methodPassword": "パスワード認証",
+  "settings.methodPasswordDesc": "メールアドレスとパスワードでログインします",
+  "settings.method2faEmail": "二段階認証（メール）",
+  "settings.method2faEmailDesc": "ログイン時にメールで認証コードを受け取ります",
+  "settings.method2faChatwork": "二段階認証（Chatwork）",
+  "settings.method2faChatworkDesc": "ログイン時にChatworkで認証コードを受け取ります",
+  "settings.newPassword": "新しいパスワード",
+  "settings.newPasswordConfirm": "新しいパスワード（確認）",
+  "settings.authMethodSaved": "認証方式を変更しました",
+  "settings.authMethodFailed": "認証方式の変更に失敗しました",
+  "settings.authMethodSaving": "変更中...",
+  "settings.authMethodSave": "認証方式を保存",
 };
 
 export default ja;

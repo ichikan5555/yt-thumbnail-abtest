@@ -109,10 +109,12 @@ class RotationScheduler:
             if test.status != TestStatus.RUNNING:
                 return
 
+            uid = test.user_id
+
             # End current measurement if any
             measurement_id = self._active_measurements.get(test_id)
             if measurement_id:
-                views = youtube_api.get_view_count(test.video_id, test.id)
+                views = youtube_api.get_view_count(test.video_id, test.id, user_id=uid)
                 state_machine.record_rotation_end(measurement_id, views)
 
             self._finish_test(test_id)
@@ -131,9 +133,11 @@ class RotationScheduler:
             if variant is None:
                 return
 
+            uid = test.user_id
+
             # Check quota before proceeding
             # thumbnails.set = 50 units + videos.list = 1 unit
-            if not youtube_api.check_quota_available(51):
+            if not youtube_api.check_quota_available(51, user_id=uid):
                 logger.warning("Quota exhausted, pausing test #%d", test_id)
                 state_machine.pause_test(test_id)
                 notifier.notify_error(test_id, "API quota exhausted. Test paused.")
@@ -141,10 +145,10 @@ class RotationScheduler:
                 return
 
             # Set thumbnail
-            youtube_api.set_thumbnail(test.video_id, variant.image_path, test.id)
+            youtube_api.set_thumbnail(test.video_id, variant.image_path, test.id, user_id=uid)
 
             # Get current view count
-            views = youtube_api.get_view_count(test.video_id, test.id)
+            views = youtube_api.get_view_count(test.video_id, test.id, user_id=uid)
 
             # Record measurement start
             measurement = state_machine.record_rotation_start(
@@ -175,12 +179,14 @@ class RotationScheduler:
                 self._remove_job(test_id)
                 return
 
+            uid = test.user_id
+
             # End current rotation measurement
             measurement_id = self._active_measurements.get(test_id)
             prev_velocity = None
             prev_label = None
             if measurement_id:
-                views = youtube_api.get_view_count(test.video_id, test.id)
+                views = youtube_api.get_view_count(test.video_id, test.id, user_id=uid)
                 m = state_machine.record_rotation_end(measurement_id, views)
                 prev_velocity = m.velocity
 
@@ -234,7 +240,7 @@ class RotationScheduler:
             variant = session.get(Variant, winner.variant_id)
             session.close()
 
-            youtube_api.set_thumbnail(test.video_id, variant.image_path, test.id)
+            youtube_api.set_thumbnail(test.video_id, variant.image_path, test.id, user_id=test.user_id)
             state_machine.complete_test(test_id, winner.variant_id)
 
             msg = analyzer.format_result_message(result)
@@ -323,7 +329,7 @@ class RotationScheduler:
 
             # Get current view count
             try:
-                views = youtube_api.get_view_count(test.video_id, test.id)
+                views = youtube_api.get_view_count(test.video_id, test.id, user_id=test.user_id)
             except Exception as e:
                 logger.warning("Degradation check view count failed for test #%d: %s", test_id, e)
                 return
@@ -416,7 +422,7 @@ class RotationScheduler:
                 )
                 for m in incomplete:
                     try:
-                        views = youtube_api.get_view_count(test.video_id, test.id)
+                        views = youtube_api.get_view_count(test.video_id, test.id, user_id=test.user_id)
                         state_machine.record_rotation_end(m.id, views)
                         cycle_complete, test_complete = state_machine.advance_rotation(test.id)
                         if test_complete:

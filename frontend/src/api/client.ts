@@ -15,6 +15,7 @@ import type {
   BackupCreateResult,
   TestTemplate,
   LogoStatus,
+  YouTubeStatus,
 } from "./types";
 
 const api = axios.create({ baseURL: "/api" });
@@ -219,4 +220,49 @@ export async function deleteLogo(): Promise<void> {
 export async function getLogo(): Promise<LogoStatus> {
   const { data } = await api.get<LogoStatus>("/settings/logo");
   return data;
+}
+
+// YouTube OAuth
+export async function getYouTubeStatus(): Promise<YouTubeStatus> {
+  const { data } = await api.get<YouTubeStatus>("/settings/youtube/status");
+  return data;
+}
+
+export async function saveYouTubeCredentials(clientId: string, clientSecret: string): Promise<void> {
+  await api.post("/settings/youtube/credentials", { client_id: clientId, client_secret: clientSecret });
+}
+
+export async function connectYouTube(): Promise<{ url: string }> {
+  const { data } = await api.get<{ url: string }>("/settings/youtube/connect");
+  return data;
+}
+
+export async function disconnectYouTube(): Promise<void> {
+  await api.post("/settings/youtube/disconnect");
+}
+
+// Auth method update
+export interface UpdateAuthMethodData {
+  auth_method: "password" | "2fa_email" | "2fa_chatwork";
+  password?: string;
+  chatwork_room_id?: string;
+  chatwork_api_token?: string;
+}
+
+export interface AuthUserResponse {
+  id: number;
+  email: string;
+  name: string;
+  auth_method: string;
+  plan: string;
+  trial_ends_at: string | null;
+  trial_active: boolean;
+  trial_days_left: number;
+  youtube_connected: boolean;
+  youtube_channel_title: string;
+}
+
+export async function updateAuthMethod(data: UpdateAuthMethodData): Promise<AuthUserResponse> {
+  const { data: resp } = await api.put<AuthUserResponse>("/auth/method", data);
+  return resp;
 }

@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { getSettings, updateSettings, createBackup, listBackups, downloadBackup, deleteBackup, listTemplates, deleteTemplate, uploadLogo, deleteLogo, getLogo } from "../api/client";
+import { getSettings, updateSettings, createBackup, listBackups, downloadBackup, deleteBackup, listTemplates, deleteTemplate, uploadLogo, deleteLogo, getLogo, getYouTubeStatus, saveYouTubeCredentials, connectYouTube, disconnectYouTube } from "../api/client";
+import type { UpdateAuthMethodData } from "../api/client";
 import { DEFAULT_WEIGHTS } from "../api/types";
-import type { Settings as SettingsType, BackupItem, TestTemplate } from "../api/types";
-import WeightSliders from "../components/WeightSliders";
+import type { Settings as SettingsType, BackupItem, TestTemplate, YouTubeStatus } from "../api/types";
+import WeightPresetSelector from "../components/WeightPresetSelector";
 import { useT } from "../i18n/I18nContext";
 import { useAuth } from "../context/AuthContext";
 
@@ -10,11 +11,19 @@ const CHANNEL_OPTIONS = ["chatwork", "email", "slack"] as const;
 
 export default function Settings() {
   const t = useT();
-  const { user } = useAuth();
+  const { user, refresh, updateAuthMethod } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+
+  // YouTube state
+  const [ytStatus, setYtStatus] = useState<YouTubeStatus | null>(null);
+  const [ytClientId, setYtClientId] = useState("");
+  const [ytClientSecret, setYtClientSecret] = useState("");
+  const [ytSaving, setYtSaving] = useState(false);
+  const [ytMsg, setYtMsg] = useState("");
+  const [ytConnecting, setYtConnecting] = useState(false);
 
   // Backup state
   const isPro = user?.plan === "pro" || user?.trial_active === true;
@@ -29,6 +38,17 @@ export default function Settings() {
   // Logo state
   const [hasLogo, setHasLogo] = useState(false);
   const [logoMsg, setLogoMsg] = useState("");
+
+  // Auth method state
+  type AuthMethod = "password" | "2fa_email" | "2fa_chatwork";
+  const [authMethod, setAuthMethod] = useState<AuthMethod>((user?.auth_method as AuthMethod) || "password");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authPasswordConfirm, setAuthPasswordConfirm] = useState("");
+  const [authChatworkRoomId, setAuthChatworkRoomId] = useState("");
+  const [authChatworkApiToken, setAuthChatworkApiToken] = useState("");
+  const [authSaving, setAuthSaving] = useState(false);
+  const [authMsg, setAuthMsg] = useState("");
+  const [authError, setAuthError] = useState("");
 
   const [rotationInterval, setRotationInterval] = useState(30);
   const [cycles, setCycles] = useState(1);
@@ -51,6 +71,12 @@ export default function Settings() {
       .finally(() => setBackupLoading(false));
   };
 
+  const loadYouTubeStatus = () => {
+    getYouTubeStatus()
+      .then(setYtStatus)
+      .catch(() => {});
+  };
+
   useEffect(() => {
     getSettings()
       .then((s: SettingsType) => {
@@ -70,6 +96,17 @@ export default function Settings() {
     loadBackups();
     listTemplates().then(setTemplates).catch(() => {});
     getLogo().then((s) => setHasLogo(s.has_logo)).catch(() => {});
+    loadYouTubeStatus();
+
+    // Check for youtube=connected query param
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("youtube") === "connected") {
+      setYtMsg(t("youtube.connected"));
+      loadYouTubeStatus();
+      refresh();
+      // Clean URL
+      window.history.replaceState({}, "", "/settings");
+    }
   }, []);
 
   const toggleChannel = (ch: string) => {
@@ -99,6 +136,45 @@ export default function Settings() {
     }
   };
 
+  const handleYtSaveCredentials = async () => {
+    setYtSaving(true);
+    setYtMsg("");
+    try {
+      await saveYouTubeCredentials(ytClientId, ytClientSecret);
+      setYtMsg(t("youtube.credentialsSaved"));
+      loadYouTubeStatus();
+    } catch {
+      setYtMsg(t("youtube.credentialsFailed"));
+    } finally {
+      setYtSaving(false);
+    }
+  };
+
+  const handleYtConnect = async () => {
+    setYtConnecting(true);
+    setYtMsg("");
+    try {
+      const { url } = await connectYouTube();
+      window.location.href = url;
+    } catch {
+      setYtMsg(t("youtube.connectFailed"));
+      setYtConnecting(false);
+    }
+  };
+
+  const handleYtDisconnect = async () => {
+    if (!confirm(t("youtube.confirmDisconnect"))) return;
+    try {
+      await disconnectYouTube();
+      setYtStatus(null);
+      loadYouTubeStatus();
+      refresh();
+      setYtMsg(t("youtube.disconnected"));
+    } catch {
+      setYtMsg(t("youtube.disconnectFailed"));
+    }
+  };
+
   if (loading) {
     return <p className="text-gray-500">{t("common.loading")}</p>;
   }
@@ -118,6 +194,236 @@ export default function Settings() {
           {t("settings.saved")}
         </div>
       )}
+
+      {/* YouTube Connection */}
+      <section className="bg-white rounded-lg border border-gray-200 p-5 mb-6">
+        <h2 className="text-lg font-semibold text-gray-800 mb-1">
+          {t("youtube.title")}
+        </h2>
+        <p className="text-sm text-gray-500 mb-4">
+          {t("youtube.description")}
+        </p>
+
+        {ytStatus?.connected ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="inline-block w-2.5 h-2.5 bg-green-500 rounded-full" />
+              <span className="text-sm font-medium text-green-700">
+                {t("youtube.connectedLabel")}
+              </span>
+              {ytStatus.channel_title && (
+                <span className="text-sm text-gray-500">— {ytStatus.channel_title}</span>
+              )}
+            </div>
+            <button
+              onClick={handleYtDisconnect}
+              className="text-xs text-red-500 hover:underline"
+            >
+              {t("youtube.disconnect")}
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {!ytStatus?.has_credentials && (
+              <div className="space-y-3">
+                <p className="text-xs text-gray-500">{t("youtube.credentialsHelp")}</p>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Client ID
+                  </label>
+                  <input
+                    type="text"
+                    value={ytClientId}
+                    onChange={(e) => setYtClientId(e.target.value)}
+                    placeholder="xxxxxxxxx.apps.googleusercontent.com"
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Client Secret
+                  </label>
+                  <input
+                    type="password"
+                    value={ytClientSecret}
+                    onChange={(e) => setYtClientSecret(e.target.value)}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+                <button
+                  onClick={handleYtSaveCredentials}
+                  disabled={ytSaving || !ytClientId || !ytClientSecret}
+                  className="bg-gray-600 text-white px-4 py-2 rounded text-sm hover:bg-gray-700 disabled:opacity-50"
+                >
+                  {ytSaving ? t("settings.saving") : t("youtube.saveCredentials")}
+                </button>
+              </div>
+            )}
+
+            {ytStatus?.has_credentials && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="inline-block w-2.5 h-2.5 bg-yellow-500 rounded-full" />
+                  <span className="text-sm text-yellow-700">{t("youtube.notConnected")}</span>
+                </div>
+                <button
+                  onClick={handleYtConnect}
+                  disabled={ytConnecting}
+                  className="bg-red-600 text-white px-4 py-2 rounded text-sm hover:bg-red-700 disabled:opacity-50"
+                >
+                  {ytConnecting ? t("youtube.connecting") : t("youtube.connectBtn")}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {ytMsg && (
+          <p className="text-sm text-gray-600 mt-3">{ytMsg}</p>
+        )}
+      </section>
+
+      {/* Auth Method */}
+      <section className="bg-white rounded-lg border border-gray-200 p-5 mb-6">
+        <h2 className="text-lg font-semibold text-gray-800 mb-1">
+          {t("settings.authMethod")}
+        </h2>
+        <p className="text-sm text-gray-500 mb-4">
+          {t("settings.authMethodDesc")}
+        </p>
+
+        <div className="space-y-3 mb-4">
+          {([
+            { value: "password" as AuthMethod, labelKey: "settings.methodPassword", descKey: "settings.methodPasswordDesc" },
+            { value: "2fa_email" as AuthMethod, labelKey: "settings.method2faEmail", descKey: "settings.method2faEmailDesc" },
+            { value: "2fa_chatwork" as AuthMethod, labelKey: "settings.method2faChatwork", descKey: "settings.method2faChatworkDesc" },
+          ]).map((opt) => (
+            <label
+              key={opt.value}
+              className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                authMethod === opt.value ? "border-indigo-500 bg-indigo-50" : "border-gray-200 hover:bg-gray-50"
+              }`}
+            >
+              <input
+                type="radio"
+                name="auth_method_setting"
+                value={opt.value}
+                checked={authMethod === opt.value}
+                onChange={() => { setAuthMethod(opt.value); setAuthMsg(""); setAuthError(""); }}
+                className="mt-0.5"
+              />
+              <div>
+                <div className="text-sm font-medium text-gray-800">
+                  {t(opt.labelKey)}
+                  {user?.auth_method === opt.value && (
+                    <span className="ml-2 text-xs text-green-600 font-normal">({t("settings.currentMethod")})</span>
+                  )}
+                </div>
+                <div className="text-xs text-gray-500">{t(opt.descKey)}</div>
+              </div>
+            </label>
+          ))}
+        </div>
+
+        {/* Password fields */}
+        {authMethod === "password" && authMethod !== user?.auth_method && (
+          <div className="space-y-3 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("settings.newPassword")}</label>
+              <input
+                type="password"
+                value={authPassword}
+                onChange={(e) => setAuthPassword(e.target.value)}
+                minLength={8}
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">{t("register.passwordHint")}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("settings.newPasswordConfirm")}</label>
+              <input
+                type="password"
+                value={authPasswordConfirm}
+                onChange={(e) => setAuthPasswordConfirm(e.target.value)}
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Chatwork fields */}
+        {authMethod === "2fa_chatwork" && (
+          <div className="space-y-3 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("register.chatworkToken")}</label>
+              <input
+                type="password"
+                value={authChatworkApiToken}
+                onChange={(e) => setAuthChatworkApiToken(e.target.value)}
+                placeholder="xxxxxxxxxxxxxxxxxxxx"
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">{t("register.chatworkTokenHint")}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("register.chatworkRoomId")}</label>
+              <input
+                type="text"
+                value={authChatworkRoomId}
+                onChange={(e) => setAuthChatworkRoomId(e.target.value)}
+                placeholder="253108411"
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">{t("register.chatworkRoomHint")}</p>
+            </div>
+          </div>
+        )}
+
+        <button
+          onClick={async () => {
+            setAuthMsg("");
+            setAuthError("");
+
+            if (authMethod === "password" && authMethod !== user?.auth_method) {
+              if (authPassword.length < 8) { setAuthError(t("register.passwordMin")); return; }
+              if (authPassword !== authPasswordConfirm) { setAuthError(t("register.passwordMismatch")); return; }
+            }
+            if (authMethod === "2fa_chatwork") {
+              if (!authChatworkApiToken.trim()) { setAuthError(t("register.chatworkTokenRequired")); return; }
+              if (!authChatworkRoomId.trim()) { setAuthError(t("register.chatworkRoomRequired")); return; }
+            }
+
+            setAuthSaving(true);
+            try {
+              const data: UpdateAuthMethodData = { auth_method: authMethod };
+              if (authMethod === "password") data.password = authPassword;
+              if (authMethod === "2fa_chatwork") {
+                data.chatwork_room_id = authChatworkRoomId.trim();
+                data.chatwork_api_token = authChatworkApiToken.trim();
+              }
+              await updateAuthMethod(data);
+              setAuthMsg(t("settings.authMethodSaved"));
+              setAuthPassword("");
+              setAuthPasswordConfirm("");
+            } catch {
+              setAuthError(t("settings.authMethodFailed"));
+            } finally {
+              setAuthSaving(false);
+            }
+          }}
+          disabled={authSaving || authMethod === user?.auth_method && authMethod !== "2fa_chatwork"}
+          className="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700 disabled:opacity-50"
+        >
+          {authSaving ? t("settings.authMethodSaving") : t("settings.authMethodSave")}
+        </button>
+
+        {authMsg && (
+          <p className="text-sm text-green-600 mt-3">{authMsg}</p>
+        )}
+        {authError && (
+          <p className="text-sm text-red-600 mt-3">{authError}</p>
+        )}
+      </section>
 
       {/* Test Defaults */}
       <section className="bg-white rounded-lg border border-gray-200 p-5 mb-6">
@@ -178,12 +484,7 @@ export default function Settings() {
           </div>
         </div>
 
-        <div>
-          <h3 className="text-sm font-medium text-gray-700 mb-2">
-            {t("settings.metricWeights")}
-          </h3>
-          <WeightSliders weights={metricWeights} onChange={setMetricWeights} />
-        </div>
+        <WeightPresetSelector weights={metricWeights} onChange={setMetricWeights} />
       </section>
 
       {/* Notification Channels */}

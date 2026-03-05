@@ -23,6 +23,16 @@ class YouTubeAnalyticsService:
     def __init__(self):
         self._service = None
 
+    def _get_service(self, user_id: int | None = None):
+        """Get Analytics service, preferring user credentials if available."""
+        if user_id:
+            from app.services.youtube_api import youtube_api
+            creds = youtube_api._get_user_credentials(user_id)
+            if creds:
+                return build("youtubeAnalytics", "v2", credentials=creds)
+        # Fallback to global
+        return self.service
+
     @property
     def service(self):
         if self._service is None:
@@ -32,11 +42,12 @@ class YouTubeAnalyticsService:
         return self._service
 
     def fetch_video_analytics(
-        self, video_id: str, start_date: date, end_date: date
+        self, video_id: str, start_date: date, end_date: date, user_id: int | None = None,
     ) -> list[dict]:
         """Fetch daily analytics for a video. Returns list of {date, metrics...}."""
         try:
-            response = self.service.reports().query(
+            svc = self._get_service(user_id)
+            response = svc.reports().query(
                 ids="channel==MINE",
                 startDate=start_date.isoformat(),
                 endDate=end_date.isoformat(),
@@ -86,7 +97,7 @@ class YouTubeAnalyticsService:
 
             # Fetch daily analytics
             daily_data = self.fetch_video_analytics(
-                test.video_id, start_date, end_date
+                test.video_id, start_date, end_date, user_id=test.user_id
             )
 
             if not daily_data:

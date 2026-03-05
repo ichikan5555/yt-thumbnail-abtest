@@ -7,7 +7,8 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse
 
 from app.config import BASE_DIR
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, verify_test_ownership
+from app.database import get_session
 from app.models import User
 
 logger = logging.getLogger(__name__)
@@ -28,6 +29,12 @@ def _require_pro(user: User):
 def generate_report_endpoint(test_id: int, user: User = Depends(get_current_user)):
     """Generate a PDF report for a completed test (Pro only)."""
     _require_pro(user)
+
+    session = get_session()
+    try:
+        verify_test_ownership(test_id, user.id, session)
+    finally:
+        session.close()
 
     from app.services.pdf_service import generate_report
 

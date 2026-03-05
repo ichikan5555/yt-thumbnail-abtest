@@ -4,6 +4,7 @@ import enum
 from datetime import datetime, timedelta
 
 from sqlalchemy import (
+    Boolean,
     Column,
     DateTime,
     Enum,
@@ -62,6 +63,9 @@ class ABTest(Base):
     # Degradation tracking (Feature 4)
     degradation_tracking = Column(Integer, default=1)          # 1=on, 0=off
     degradation_alert = Column(Text, nullable=True)
+
+    # Multi-tenant
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 
     variants = relationship("Variant", back_populates="ab_test", foreign_keys="Variant.ab_test_id")
     measurements = relationship("Measurement", back_populates="ab_test")
@@ -149,6 +153,7 @@ class QuotaLog(Base):
     operation = Column(String(50), nullable=False)
     units = Column(Integer, nullable=False)
     ab_test_id = Column(Integer, ForeignKey("ab_tests.id"), nullable=True)
+    user_id = Column(Integer, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -156,7 +161,8 @@ class UserSettings(Base):
     __tablename__ = "user_settings"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    key = Column(String(100), nullable=False, unique=True, index=True)
+    user_id = Column(Integer, nullable=True)
+    key = Column(String(100), nullable=False, index=True)
     value = Column(Text, default="")
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -170,8 +176,15 @@ class User(Base):
     password_hash = Column(String(255), nullable=True)  # null for 2FA-only users
     auth_method = Column(String(20), nullable=False, default="password")  # password | 2fa_chatwork | 2fa_email
     chatwork_room_id = Column(String(50), nullable=True)
+    chatwork_api_token = Column(String(255), nullable=True)
     plan = Column(String(20), nullable=False, default="standard")  # standard | pro
     trial_ends_at = Column(DateTime, nullable=True)  # free trial expiry (14 days from registration)
+    # YouTube OAuth2 per-user
+    youtube_client_id = Column(String(255), nullable=True)
+    youtube_client_secret = Column(String(255), nullable=True)
+    youtube_token = Column(Text, nullable=True)       # OAuth2 token JSON
+    youtube_connected_at = Column(DateTime, nullable=True)
+    youtube_channel_title = Column(String(255), default="")
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -222,6 +235,7 @@ class CompetitorAnalysis(Base):
     __tablename__ = "competitor_analyses"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, nullable=True)
     channel_id = Column(String(50), nullable=False)
     channel_title = Column(String(500), default="")
     video_count = Column(Integer, default=0)

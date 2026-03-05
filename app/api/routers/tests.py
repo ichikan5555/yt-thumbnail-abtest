@@ -8,11 +8,12 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 
 from app.config import settings
 from app.database import get_session
-from app.models import ABTest, DegradationCheck, Measurement, TestStatus, Variant
+from app.models import ABTest, DegradationCheck, Measurement, TestStatus, User, Variant
+from app.api.deps import get_current_user, verify_test_ownership
 from app.api.schemas import (
     DegradationCheckOut,
     DegradationOut,
@@ -64,10 +65,10 @@ def _measurement_out(m: Measurement, session) -> MeasurementOut:
 
 
 @router.get("", response_model=list[TestSummary])
-def list_tests():
+def list_tests(user: User = Depends(get_current_user)):
     session = get_session()
     try:
-        tests = session.query(ABTest).order_by(ABTest.id.desc()).limit(50).all()
+        tests = session.query(ABTest).filter_by(user_id=user.id).order_by(ABTest.id.desc()).limit(50).all()
         result = []
         for t in tests:
             winner_label = None
@@ -111,6 +112,7 @@ async def create_test(
     test_mode: str = Form(default="single"),
     scheduled_days: str = Form(default=""),
     daily_start_time: str = Form(default=""),
+    user: User = Depends(get_current_user),
 ):
     from app.services.youtube_api import youtube_api
     from app.services.state_machine import state_machine
@@ -135,7 +137,7 @@ async def create_test(
 
     # Load DB defaults as fallback
     from app.api.routers.settings import get_setting_value
-    db_cycles = int(get_setting_value("default_cycles") or settings.cycles)
+    db_cycles = int(get_setting_value("default_cycles", user_id=user.id) or settings.cycles)
 
     # Calculate cycles from schedule if end time is given
     interval = max(rotation_interval, 5)  # minimum 5 min
@@ -195,6 +197,7 @@ async def create_test(
         scheduled_days=scheduled_days if test_mode == "multi_day" else "",
         daily_start_time=daily_start_time if test_mode == "multi_day" else "",
         total_days=total_days,
+        user_id=user.id,
     )
 
     now = datetime.utcnow()
@@ -224,17 +227,20 @@ async def create_test(
 
 
 @router.get("/{test_id}", response_model=TestDetail)
-def get_test(test_id: int):
+def get_test(test_id: int, user: User = Depends(get_current_user)):
+    session = get_session()
+    try:
+        verify_test_ownership(test_id, user.id, session)
+    finally:
+        session.close()
     return _get_test_detail(test_id)
 
 
 @router.get("/{test_id}/results", response_model=TestResultOut)
-def get_results(test_id: int):
+def get_results(test_id: int, user: User = Depends(get_current_user)):
     session = get_session()
     try:
-        test = session.get(ABTest, test_id)
-        if not test:
-            raise HTTPException(404, "Test not found")
+        verify_test_ownership(test_id, user.id, session)
     finally:
         session.close()
 
@@ -274,8 +280,13 @@ def get_results(test_id: int):
 
 
 @router.post("/{test_id}/fetch-analytics")
-def fetch_analytics(test_id: int):
+def fetch_analytics(test_id: int, user: User = Depends(get_current_user)):
     """Fetch YouTube Analytics data for a test (may have 1-2 day delay)."""
+    session = get_session()
+    try:
+        verify_test_ownership(test_id, user.id, session)
+    finally:
+        session.close()
     from app.services.youtube_analytics import youtube_analytics
     try:
         data = youtube_analytics.fetch_and_store(test_id)
@@ -285,7 +296,12 @@ def fetch_analytics(test_id: int):
 
 
 @router.post("/{test_id}/pause", response_model=TestDetail)
-def pause_test(test_id: int):
+def pause_test(test_id: int, user: User = Depends(get_current_user)):
+    session = get_session()
+    try:
+        verify_test_ownership(test_id, user.id, session)
+    finally:
+        session.close()
     from app.services.state_machine import state_machine
     try:
         state_machine.pause_test(test_id)
@@ -295,7 +311,12 @@ def pause_test(test_id: int):
 
 
 @router.post("/{test_id}/resume", response_model=TestDetail)
-def resume_test(test_id: int):
+def resume_test(test_id: int, user: User = Depends(get_current_user)):
+    session = get_session()
+    try:
+        verify_test_ownership(test_id, user.id, session)
+    finally:
+        session.close()
     from app.services.state_machine import state_machine
     from app.services.scheduler import rotation_scheduler
     try:
@@ -307,7 +328,12 @@ def resume_test(test_id: int):
 
 
 @router.post("/{test_id}/cancel", response_model=TestDetail)
-def cancel_test(test_id: int):
+def cancel_test(test_id: int, user: User = Depends(get_current_user)):
+    session = get_session()
+    try:
+        verify_test_ownership(test_id, user.id, session)
+    finally:
+        session.close()
     from app.services.state_machine import state_machine
     try:
         state_machine.cancel_test(test_id)
@@ -319,13 +345,11 @@ def cancel_test(test_id: int):
 # --- Feature 1: Heatmap ---
 
 @router.get("/{test_id}/heatmap", response_model=HeatmapOut)
-def get_heatmap(test_id: int):
+def get_heatmap(test_id: int, user: User = Depends(get_current_user)):
     """Get time-of-day heatmap data for a test."""
     session = get_session()
     try:
-        test = session.get(ABTest, test_id)
-        if not test:
-            raise HTTPException(404, "Test not found")
+        verify_test_ownership(test_id, user.id, session)
 
         variants = session.query(Variant).filter_by(ab_test_id=test_id).all()
         variant_map = {v.id: v.label for v in variants}
@@ -362,13 +386,11 @@ def get_heatmap(test_id: int):
 # --- Feature 2: Significance ---
 
 @router.get("/{test_id}/significance", response_model=SignificanceOut)
-def get_significance(test_id: int):
+def get_significance(test_id: int, user: User = Depends(get_current_user)):
     """Get statistical significance analysis."""
     session = get_session()
     try:
-        test = session.get(ABTest, test_id)
-        if not test:
-            raise HTTPException(404, "Test not found")
+        verify_test_ownership(test_id, user.id, session)
     finally:
         session.close()
 
@@ -380,13 +402,11 @@ def get_significance(test_id: int):
 # --- Feature 4: Degradation ---
 
 @router.get("/{test_id}/degradation", response_model=DegradationOut)
-def get_degradation(test_id: int):
+def get_degradation(test_id: int, user: User = Depends(get_current_user)):
     """Get degradation tracking data for a completed test."""
     session = get_session()
     try:
-        test = session.get(ABTest, test_id)
-        if not test:
-            raise HTTPException(404, "Test not found")
+        verify_test_ownership(test_id, user.id, session)
 
         checks = (
             session.query(DegradationCheck)
@@ -427,13 +447,11 @@ def get_degradation(test_id: int):
 
 
 @router.post("/{test_id}/degradation/toggle")
-def toggle_degradation(test_id: int):
+def toggle_degradation(test_id: int, user: User = Depends(get_current_user)):
     """Toggle degradation tracking on/off."""
     session = get_session()
     try:
-        test = session.get(ABTest, test_id)
-        if not test:
-            raise HTTPException(404, "Test not found")
+        verify_test_ownership(test_id, user.id, session)
         test.degradation_tracking = 0 if test.degradation_tracking else 1
         session.commit()
         return {"tracking_enabled": bool(test.degradation_tracking)}

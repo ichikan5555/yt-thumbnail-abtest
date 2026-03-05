@@ -44,10 +44,12 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # CORS for dev (Vite on 5173)
+    # CORS
+    origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:5173"],
+        allow_origins=origins,
+        allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
@@ -65,6 +67,7 @@ def create_app() -> FastAPI:
     from app.api.routers.backup import router as backup_router
     from app.api.routers.templates import router as templates_router
     from app.api.routers.report import router as report_router
+    from app.api.routers.youtube_oauth import router as youtube_oauth_router
 
     app.include_router(tests_router)
     app.include_router(quota_router)
@@ -77,6 +80,7 @@ def create_app() -> FastAPI:
     app.include_router(backup_router)
     app.include_router(templates_router)
     app.include_router(report_router)
+    app.include_router(youtube_oauth_router)
 
     # Serve uploaded thumbnails
     thumb_dir = settings.thumbnail_upload_dir

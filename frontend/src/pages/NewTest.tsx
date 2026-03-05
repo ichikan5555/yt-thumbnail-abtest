@@ -3,15 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { createTest, getSettings, listTemplates, saveTemplate } from "../api/client";
 import { DEFAULT_WEIGHTS } from "../api/types";
 import type { TestTemplate } from "../api/types";
-import WeightSliders from "../components/WeightSliders";
+import WeightPresetSelector from "../components/WeightPresetSelector";
 import CalendarPicker from "../components/CalendarPicker";
 import { useT } from "../i18n/I18nContext";
+import { useAuth } from "../context/AuthContext";
 
 const ALL_LABELS = ["A", "B", "C", "D"];
 
 export default function NewTest() {
   const navigate = useNavigate();
   const t = useT();
+  const { user } = useAuth();
   const [videoId, setVideoId] = useState("");
   const [numPatterns, setNumPatterns] = useState(3);
   const [files, setFiles] = useState<(File | null)[]>([null, null, null, null]);
@@ -20,7 +22,6 @@ export default function NewTest() {
   const [cycles, setCycles] = useState(1);
   const [scheduledStart, setScheduledStart] = useState("");
   const [metricWeights, setMetricWeights] = useState<Record<string, number>>({ ...DEFAULT_WEIGHTS });
-  const [showWeights, setShowWeights] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -178,6 +179,15 @@ export default function NewTest() {
   return (
     <div className="max-w-2xl">
       <h1 className="text-2xl font-bold mb-6">{t("newTest.title")}</h1>
+
+      {user && !user.youtube_connected && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded mb-4 text-sm flex items-center justify-between">
+          <span>{t("newTest.youtubeNotConnected")}</span>
+          <a href="/settings" className="text-indigo-600 hover:text-indigo-800 font-medium underline ml-2">
+            {t("newTest.goToSettings")}
+          </a>
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 text-sm">
@@ -399,21 +409,7 @@ export default function NewTest() {
 
         {/* Metric Weights */}
         <div className="bg-gray-50 rounded-lg p-4">
-          <button
-            type="button"
-            onClick={() => setShowWeights(!showWeights)}
-            className="flex items-center gap-2 text-sm font-semibold text-gray-700 w-full"
-          >
-            <span className={`transition-transform ${showWeights ? "rotate-90" : ""}`}>
-              &#9654;
-            </span>
-            {t("newTest.metricWeights")}
-          </button>
-          {showWeights && (
-            <div className="mt-4">
-              <WeightSliders weights={metricWeights} onChange={setMetricWeights} />
-            </div>
-          )}
+          <WeightPresetSelector weights={metricWeights} onChange={setMetricWeights} />
         </div>
 
         <div>

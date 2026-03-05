@@ -70,9 +70,9 @@ def verify_2fa_code(email: str, code: str) -> bool:
     return True
 
 
-def send_code_via_chatwork(room_id: str, code: str) -> bool:
+def send_code_via_chatwork(room_id: str, code: str, user_token: str | None = None) -> bool:
     """Send 2FA code via Chatwork API."""
-    token = settings.chatwork_auth_token or settings.chatwork_api_token
+    token = user_token or settings.chatwork_auth_token or settings.chatwork_api_token
     if not token or not room_id:
         logger.warning("Chatwork auth not configured (token or room_id missing)")
         return False
@@ -93,11 +93,11 @@ def send_code_via_chatwork(room_id: str, code: str) -> bool:
 
 
 def send_code_via_email(email: str, code: str) -> bool:
-    """Send 2FA code via SendGrid."""
+    """Send 2FA code via SendGrid to the user's email address."""
     from app.services.email_service import email_service
     if not email_service.enabled:
         logger.warning("SendGrid not configured for 2FA email")
         return False
     subject = "[YT A/B Test] 認証コード / Verification Code"
     body = f"認証コード: {code}\n（5分間有効）\n\nVerification code: {code}\n(Valid for 5 minutes)"
-    return email_service.send_email(subject, body)
+    return email_service.send_email(subject, body, to_email=email)

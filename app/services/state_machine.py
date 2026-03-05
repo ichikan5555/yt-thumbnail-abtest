@@ -25,6 +25,7 @@ class StateMachine:
         scheduled_days: str = "",
         daily_start_time: str = "",
         total_days: int = 1,
+        user_id: int | None = None,
     ) -> ABTest:
         """Create a new A/B test with variants."""
         labels = ["A", "B", "C", "D"][:len(image_paths)]
@@ -43,6 +44,7 @@ class StateMachine:
                 scheduled_days=scheduled_days,
                 daily_start_time=daily_start_time,
                 total_days=total_days,
+                user_id=user_id,
             )
             session.add(test)
             session.flush()

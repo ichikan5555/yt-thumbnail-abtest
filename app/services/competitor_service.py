@@ -15,13 +15,13 @@ logger = logging.getLogger(__name__)
 
 
 class CompetitorService:
-    def analyze_channel(self, channel_id: str) -> dict:
+    def analyze_channel(self, channel_id: str, user_id: int | None = None) -> dict:
         """Analyze a competitor channel's thumbnails."""
         from app.services.youtube_api import youtube_api
 
         # Get channel info
         try:
-            yt = youtube_api._get_service()
+            yt = youtube_api._get_service(user_id)
             ch_response = yt.channels().list(
                 part="snippet,statistics",
                 id=channel_id,
@@ -122,6 +122,7 @@ class CompetitorService:
                 channel_title=channel_title,
                 video_count=total_videos,
                 analysis_result=json.dumps(result),
+                user_id=user_id,
             )
             session.add(analysis)
             session.commit()

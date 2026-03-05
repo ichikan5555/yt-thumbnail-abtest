@@ -257,6 +257,14 @@ export interface LogoStatus {
   has_logo: boolean;
 }
 
+// YouTube OAuth
+export interface YouTubeStatus {
+  connected: boolean;
+  channel_title: string;
+  connected_at: string | null;
+  has_credentials: boolean;
+}
+
 // Backup
 export interface BackupItem {
   filename: string;

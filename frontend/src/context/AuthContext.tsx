@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import axios from "axios";
+import { updateAuthMethod as apiUpdateAuthMethod } from "../api/client";
+import type { UpdateAuthMethodData } from "../api/client";
 
 const api = axios.create({ baseURL: "/api" });
 
@@ -12,6 +14,8 @@ export interface AuthUser {
   trial_ends_at: string | null;
   trial_active: boolean;
   trial_days_left: number;
+  youtube_connected: boolean;
+  youtube_channel_title: string;
 }
 
 interface AuthContextValue {
@@ -21,6 +25,7 @@ interface AuthContextValue {
   sendCode: (email: string) => Promise<{ channel: string; message: string }>;
   verifyCode: (email: string, code: string) => Promise<AuthUser>;
   register: (data: RegisterData) => Promise<AuthUser>;
+  updateAuthMethod: (data: UpdateAuthMethodData) => Promise<AuthUser>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -31,6 +36,7 @@ export interface RegisterData {
   password?: string;
   auth_method: string;
   chatwork_room_id?: string;
+  chatwork_api_token?: string;
 }
 
 const AuthContext = createContext<AuthContextValue>(null!);
@@ -75,13 +81,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return data;
   }, []);
 
+  const updateAuthMethodFn = useCallback(async (data: UpdateAuthMethodData) => {
+    const resp = await apiUpdateAuthMethod(data);
+    const u = resp as AuthUser;
+    setUser(u);
+    return u;
+  }, []);
+
   const logout = useCallback(async () => {
     await api.post("/auth/logout");
     setUser(null);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, sendCode, verifyCode, register, logout, refresh }}>
+    <AuthContext.Provider value={{ user, loading, login, sendCode, verifyCode, register, updateAuthMethod: updateAuthMethodFn, logout, refresh }}>
       {children}
     </AuthContext.Provider>
   );

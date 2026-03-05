@@ -4,24 +4,23 @@ import asyncio
 import json
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from starlette.responses import StreamingResponse
 
+from app.api.deps import get_current_user, verify_test_ownership
 from app.database import get_session
-from app.models import ABTest, Variant
+from app.models import ABTest, User, Variant
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/events", tags=["events"])
 
 
 @router.get("/tests/{test_id}")
-async def test_events(test_id: int):
-    # Verify test exists
+async def test_events(test_id: int, user: User = Depends(get_current_user)):
+    # Verify test exists and belongs to user
     session = get_session()
     try:
-        test = session.get(ABTest, test_id)
-        if not test:
-            raise HTTPException(404, "Test not found")
+        verify_test_ownership(test_id, user.id, session)
     finally:
         session.close()
 

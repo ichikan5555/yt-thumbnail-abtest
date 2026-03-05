@@ -3,7 +3,7 @@
 from fastapi import Cookie, HTTPException
 
 from app.database import get_session
-from app.models import User
+from app.models import ABTest, User
 from app.services.auth_service import decode_access_token
 
 COOKIE_NAME = "yt_abtest_token"
@@ -26,6 +26,16 @@ def get_current_user(yt_abtest_token: str | None = Cookie(default=None)) -> User
         return user
     finally:
         session.close()
+
+
+def verify_test_ownership(test_id: int, user_id: int, session) -> ABTest:
+    """Check that a test exists and belongs to the user."""
+    test = session.get(ABTest, test_id)
+    if not test:
+        raise HTTPException(404, "Test not found")
+    if test.user_id is not None and test.user_id != user_id:
+        raise HTTPException(403, "Access denied")
+    return test
 
 
 def get_optional_user(yt_abtest_token: str | None = Cookie(default=None)) -> User | None:
