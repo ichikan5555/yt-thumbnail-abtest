@@ -5,7 +5,7 @@ const en: Record<string, string> = {
   "common.noData": "No data",
 
   // Navigation
-  "nav.appName": "YT A/B Test",
+  "nav.appName": "Thumb TEST Pro",
   "nav.dashboard": "Dashboard",
   "nav.newTest": "New Test",
 
@@ -253,7 +253,7 @@ const en: Record<string, string> = {
   "lp.footerGuide": "User Guide",
   "lp.footerFaq": "FAQ",
   "lp.footerContact": "Contact",
-  "lp.footerCopyright": "YT A/B Test. All rights reserved.",
+  "lp.footerCopyright": "Thumb TEST Pro. All rights reserved.",
   "lp.footerCompany": "Company",
   "lp.footerPrivacy": "Privacy Policy",
   "lp.footerTerms": "Terms of Service",
@@ -326,7 +326,7 @@ const en: Record<string, string> = {
   "company.address": "Address",
   "company.addressValue": "Shibuya, Tokyo, Japan",
   "company.email": "Contact",
-  "company.emailValue": "support@yt-abtest.com",
+  "company.emailValue": "support@thumbtestpro.com",
   "company.established": "Established",
   "company.establishedValue": "2026",
   "company.business": "Business",
@@ -348,13 +348,13 @@ const en: Record<string, string> = {
   "privacy.section6Title": "6. Your Rights",
   "privacy.section6Body": "Users may request access to, correction of, or deletion of their account information at any time. Please contact us via the contact form or email.",
   "privacy.section7Title": "7. Contact",
-  "privacy.section7Body": "For privacy-related inquiries, please contact support@yt-abtest.com.",
+  "privacy.section7Body": "For privacy-related inquiries, please contact support@thumbtestpro.com.",
 
   // Terms of Service
   "terms.title": "Terms of Service",
   "terms.lastUpdated": "Last updated: March 5, 2026",
   "terms.section1Title": "1. Scope",
-  "terms.section1Body": "These terms govern the use of \"YT A/B Test\" service. By using the service, you agree to these terms.",
+  "terms.section1Body": "These terms govern the use of \"Thumb TEST Pro\" service. By using the service, you agree to these terms.",
   "terms.section2Title": "2. Account Registration",
   "terms.section2Body": "Users must register with accurate information. Account management is the user's responsibility. Accounts may not be lent or transferred to third parties.",
   "terms.section3Title": "3. Pricing",

@@ -5,7 +5,7 @@ const ja: Record<string, string> = {
   "common.noData": "データなし",
 
   // ナビゲーション
-  "nav.appName": "YT A/Bテスト",
+  "nav.appName": "Thumb TEST Pro",
   "nav.dashboard": "ダッシュボード",
   "nav.newTest": "新規テスト",
 
@@ -253,7 +253,7 @@ const ja: Record<string, string> = {
   "lp.footerGuide": "使い方ガイド",
   "lp.footerFaq": "よくある質問",
   "lp.footerContact": "お問い合わせ",
-  "lp.footerCopyright": "YT A/B Test. All rights reserved.",
+  "lp.footerCopyright": "Thumb TEST Pro. All rights reserved.",
   "lp.footerCompany": "運営会社",
   "lp.footerPrivacy": "プライバシーポリシー",
   "lp.footerTerms": "利用規約",
@@ -326,7 +326,7 @@ const ja: Record<string, string> = {
   "company.address": "所在地",
   "company.addressValue": "東京都渋谷区",
   "company.email": "お問い合わせ",
-  "company.emailValue": "support@yt-abtest.com",
+  "company.emailValue": "support@thumbtestpro.com",
   "company.established": "設立",
   "company.establishedValue": "2026年",
   "company.business": "事業内容",
@@ -348,13 +348,13 @@ const ja: Record<string, string> = {
   "privacy.section6Title": "6. ユーザーの権利",
   "privacy.section6Body": "ユーザーはいつでもアカウント情報の閲覧・修正・削除を求めることができます。お問い合わせフォームまたはメールにてご連絡ください。",
   "privacy.section7Title": "7. お問い合わせ",
-  "privacy.section7Body": "プライバシーに関するお問い合わせは support@yt-abtest.com までご連絡ください。",
+  "privacy.section7Body": "プライバシーに関するお問い合わせは support@thumbtestpro.com までご連絡ください。",
 
   // 利用規約
   "terms.title": "利用規約",
   "terms.lastUpdated": "最終更新日: 2026年3月5日",
   "terms.section1Title": "第1条（適用）",
-  "terms.section1Body": "本規約は、当サービス「YT A/B Test」の利用に関する条件を定めるものです。ユーザーは本規約に同意の上、サービスを利用するものとします。",
+  "terms.section1Body": "本規約は、当サービス「Thumb TEST Pro」の利用に関する条件を定めるものです。ユーザーは本規約に同意の上、サービスを利用するものとします。",
   "terms.section2Title": "第2条（アカウント登録）",
   "terms.section2Body": "ユーザーは正確な情報を登録する義務があります。アカウントの管理はユーザー自身の責任で行ってください。第三者にアカウントを貸与・譲渡することはできません。",
   "terms.section3Title": "第3条（利用料金）",

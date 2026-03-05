@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import {
-  BeakerIcon,
   ArrowPathIcon,
   ChartBarSquareIcon,
   TrophyIcon,
@@ -57,8 +56,18 @@ export default function Landing() {
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-gray-100">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-3">
           <Link to="/lp" className="flex items-center gap-2">
-            <BeakerIcon className="w-7 h-7 text-indigo-600" />
-            <span className="font-bold text-lg">{t("nav.appName")}</span>
+            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none">
+              <rect x="2" y="3" width="14" height="10" rx="2" className="fill-indigo-500" />
+              <path d="M5 7h8M5 10h5" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M19 8l3-3M19 8l3 3" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" />
+              <rect x="6" y="16" width="12" height="5" rx="1.5" className="fill-emerald-500" />
+              <path d="M9 18.5h6" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            <div className="flex items-baseline gap-1">
+              <span className="font-light text-lg text-gray-600">Thumb</span>
+              <span className="font-black text-lg text-gray-900 tracking-wider">TEST</span>
+              <span className="text-xs font-semibold text-indigo-600 uppercase">Pro</span>
+            </div>
           </Link>
           <div className="flex items-center gap-4">
             {/* Nav scroll links */}
@@ -282,7 +291,13 @@ export default function Landing() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <BeakerIcon className="w-5 h-5 text-indigo-600" />
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                  <rect x="2" y="3" width="14" height="10" rx="2" className="fill-indigo-500" />
+                  <path d="M5 7h8M5 10h5" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                  <path d="M19 8l3-3M19 8l3 3" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" />
+                  <rect x="6" y="16" width="12" height="5" rx="1.5" className="fill-emerald-500" />
+                  <path d="M9 18.5h6" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
                 <span className="font-bold">{t("nav.appName")}</span>
               </div>
               <p className="text-sm text-gray-500 leading-relaxed">

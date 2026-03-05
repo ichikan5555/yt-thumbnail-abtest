@@ -39,7 +39,7 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="YouTube Thumbnail A/B Test",
+        title="Thumb TEST Pro",
         version="1.0.0",
         lifespan=lifespan,
     )

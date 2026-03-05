@@ -1,6 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
-  BeakerIcon,
   PlusCircleIcon,
   ChartBarIcon,
   Cog6ToothIcon,
@@ -42,8 +41,18 @@ export default function Layout() {
       {/* サイドバー */}
       <aside className="w-56 bg-gray-900 text-gray-100 flex flex-col">
         <div className="flex items-center gap-2 px-4 py-5 border-b border-gray-700">
-          <BeakerIcon className="w-6 h-6 text-indigo-400" />
-          <span className="font-bold text-sm">{t("nav.appName")}</span>
+          <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+            <rect x="2" y="3" width="14" height="10" rx="2" className="fill-indigo-500" />
+            <path d="M5 7h8M5 10h5" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+            <path d="M19 8l3-3M19 8l3 3" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" />
+            <rect x="6" y="16" width="12" height="5" rx="1.5" className="fill-emerald-500" />
+            <path d="M9 18.5h6" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          <div className="flex items-baseline gap-1">
+            <span className="font-light text-sm text-gray-300">Thumb</span>
+            <span className="font-black text-sm text-white tracking-wider">TEST</span>
+            <span className="text-[10px] font-semibold text-indigo-400 uppercase">Pro</span>
+          </div>
         </div>
         <nav className="flex-1 px-2 py-4 space-y-1">
           {navItems.map((item) => (
